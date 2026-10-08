@@ -265,6 +265,11 @@ and labels perfect foresight as a ceiling rather than an executable strategy.
 The app reads only local, versioned research outputs. It does not require API
 keys, credentials, live trading access, or personal account data.
 
+The compact dataset required by the app is included under `data/public/`.
+Raw research inputs are intentionally excluded; the two SQL equivalence tests
+that require the original Parquet files are therefore skipped in a clean
+public clone. All app and model unit tests remain runnable.
+
 ### Public data attribution
 
 The app includes a compact, cleaned copy of the DE-LU day-ahead price series.

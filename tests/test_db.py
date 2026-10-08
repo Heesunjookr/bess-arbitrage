@@ -10,7 +10,7 @@ import pytest
 
 duckdb = pytest.importorskip("duckdb")
 
-from src.config import load_config
+from src.config import ROOT, load_config
 from src.data.db import connect, data_quality_report, ingest_prices, load_prices_sql
 from src.data.load_prices import load_prices
 
@@ -18,6 +18,9 @@ from src.data.load_prices import load_prices
 @pytest.fixture(scope="module")
 def con(tmp_path_factory):
     cfg = load_config()
+    raw_path = ROOT / cfg["paths"]["raw"]["da_prices"]
+    if not raw_path.exists():
+        pytest.skip("raw ENTSO-E parquet is intentionally not distributed")
     c = connect(cfg, db_path=tmp_path_factory.mktemp("db") / "test.duckdb")
     ingest_prices(c, cfg)
     yield c
