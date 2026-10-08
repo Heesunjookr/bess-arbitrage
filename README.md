@@ -1,6 +1,6 @@
 # BESS Arbitrage: Battery Dispatch Optimization on the German DE-LU Power Market
 
-> **Public product:** German BESS Forecast Value Monitor — an interactive,
+> **Public product:** German BESS Dispatch Lab — an interactive,
 > reproducible decision tool for comparing the economic value of day-ahead
 > forecast tiers. See [BUILDING_IN_PUBLIC.md](BUILDING_IN_PUBLIC.md) for the
 > live roadmap, evidence standard and public changelog.
@@ -262,11 +262,25 @@ python3 -m venv .venv            # Python 3.9 compatible
 .venv/bin/python -m src.paper.paper_trade
 ```
 
-## Interactive portfolio app
+## Interactive public product
 
-The Streamlit app turns the stored research artifacts into an explorable public
-demo. It separates the historical model ladder from a one-day interactive LP,
-and labels perfect foresight as a ceiling rather than an executable strategy.
+The GitHub Pages app lets a visitor choose a historical delivery day, configure
+power, duration, efficiency and throughput cost, then run a BESS dispatch
+scenario entirely in the browser. It compares an executable D-1 persistence
+schedule with a perfect-foresight ceiling, draws the hourly schedule, exports
+CSV and creates shareable scenario URLs. GitHub Actions rebuilds and deploys it
+from the versioned public price data.
+
+```bash
+python scripts/build_pages.py
+python -m http.server --directory _site 8000
+```
+
+The browser uses a 120-state dynamic programme. Its constraints and settlement
+semantics mirror the Python cvxpy reference model; the Python implementation
+remains the research and validation source of truth.
+
+The Streamlit research monitor remains available for local exploration:
 
 ```bash
 .venv/bin/python -m pip install -r requirements.txt
