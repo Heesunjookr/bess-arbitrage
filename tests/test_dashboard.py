@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from src.optimize.lp_dispatch import BatteryParams
-from src.webapp.dashboard import available_dates, compare_dispatch_day, forecast_ladder
+from src.webapp.dashboard import artifact_status, available_dates, compare_dispatch_day, forecast_ladder
 
 
 def _two_days() -> pd.DataFrame:
@@ -22,6 +22,16 @@ def test_forecast_ladder_formats_percentages():
     result = forecast_ladder(raw)
     assert result["capture_pct"].tolist() == [77, 92]
     assert result.iloc[1]["label"] == "Price + residual-load OLS"
+    assert result.iloc[1]["information_set"] == "D-1, D-7 and residual-load forecast"
+
+
+def test_artifact_status_reports_missing_and_latest(tmp_path):
+    ready = tmp_path / "ready.csv"
+    ready.write_text("ok\n")
+    result = artifact_status([ready, tmp_path / "missing.json"])
+    assert result["status"] == "incomplete"
+    assert result["artifact_count"] == 1
+    assert result["missing"] == ["missing.json"]
 
 
 def test_available_dates_requires_complete_previous_day():

@@ -1,5 +1,10 @@
 # BESS Arbitrage: Battery Dispatch Optimization on the German DE-LU Power Market
 
+> **Public product:** German BESS Forecast Value Monitor — an interactive,
+> reproducible decision tool for comparing the economic value of day-ahead
+> forecast tiers. See [BUILDING_IN_PUBLIC.md](BUILDING_IN_PUBLIC.md) for the
+> live roadmap, evidence standard and public changelog.
+
 Linear-programming optimization of **battery energy storage (BESS) price arbitrage** in the German (DE-LU) day-ahead market, with an explicit, honest separation between the *perfect-foresight ceiling* and what is *actually executable* with information available at bid time.
 
 ## Thesis

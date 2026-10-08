@@ -1,6 +1,7 @@
 """Public Streamlit app for the German BESS dispatch research project."""
 
 import json
+from datetime import datetime
 
 import pandas as pd
 import plotly.express as px
@@ -9,7 +10,11 @@ import streamlit as st
 
 from src.config import ROOT
 from src.optimize.lp_dispatch import BatteryParams
-from src.webapp.dashboard import available_dates, compare_dispatch_day, forecast_ladder
+from src.webapp.dashboard import artifact_status, available_dates, compare_dispatch_day, forecast_ladder
+
+
+REPOSITORY_URL = "https://github.com/Heesunjookr/bess-arbitrage"
+ARTICLE_URL = "https://medium.com/@heesun.jookr/pricing-perfect-foresight-what-a-day-ahead-forecast-is-actually-worth-to-a-german-battery-3281c9d79ebe"
 
 
 st.set_page_config(
@@ -25,19 +30,33 @@ st.markdown(
     .stApp { background: #f7f7f2; color: #17211b; }
     [data-testid="stMetric"] { background: white; border: 1px solid #dde3dc;
         border-radius: 12px; padding: 16px; }
-    .hero { padding: 1.5rem 0 .6rem 0; }
+    .hero { padding: 1.1rem 0 .6rem 0; }
     .eyebrow { color: #197a54; font-weight: 700; letter-spacing: .08em;
         text-transform: uppercase; font-size: .78rem; }
     .hero h1 { font-size: 3rem; line-height: 1.05; margin: .35rem 0 .6rem; }
     .hero p { color: #4b5b52; max-width: 850px; font-size: 1.08rem; }
     .note { border-left: 4px solid #e2a93b; padding: .6rem 1rem;
         background: #fffaf0; border-radius: 4px; }
+    .trust-row { display:flex; flex-wrap:wrap; gap:.45rem; margin:.8rem 0 .2rem; }
+    .trust-chip { background:#e8f3ed; color:#155f43; border:1px solid #c8dfd2;
+        border-radius:999px; padding:.28rem .65rem; font-size:.78rem; font-weight:650; }
+    .brief { background:#17211b; color:#f5f7f3; border-radius:14px; padding:1.15rem 1.3rem;
+        margin:.4rem 0 1rem; }
+    .brief strong { color:#87ddb8; }
+    .brief p { margin:.25rem 0; color:#e7eee9; }
+    .status-ready { color:#197a54; font-weight:700; }
     </style>
     <div class="hero">
-      <div class="eyebrow">OpenBESS Lab · Germany DE-LU</div>
-      <h1>What is a day-ahead forecast worth to a battery?</h1>
-      <p>An interactive, reproducible study of battery dispatch, forecast quality,
-      and data integrity in the German day-ahead power market.</p>
+      <div class="eyebrow">German BESS Forecast Value Monitor · DE-LU</div>
+      <h1>Forecast quality, measured in battery value.</h1>
+      <p>A public decision tool that converts day-ahead forecast quality into dispatch value,
+      compares executable model tiers, and exposes the assumptions behind every result.</p>
+      <div class="trust-row">
+        <span class="trust-chip">1,632 delivery days</span>
+        <span class="trust-chip">No-lookahead schedules</span>
+        <span class="trust-chip">Open methodology</span>
+        <span class="trust-chip">Tested optimisation</span>
+      </div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -61,6 +80,30 @@ def load_artifacts():
 
 summary, ladder, prices = load_artifacts()
 headline = summary["full_sample_mean"]
+status = artifact_status(
+    [
+        ROOT / "data" / "processed" / "kpi_summary.json",
+        ROOT / "data" / "processed" / "forecast_gap_recovery.csv",
+        ROOT / "data" / "public" / "da_prices.csv.gz",
+    ]
+)
+
+with st.sidebar:
+    st.markdown("### Research monitor")
+    st.markdown('<span class="status-ready">● Evidence bundle ready</span>', unsafe_allow_html=True)
+    if status["latest_modified"]:
+        st.caption(
+            "Versioned artifacts · latest build "
+            + datetime.fromtimestamp(status["latest_modified"]).strftime("%d %b %Y")
+        )
+    st.markdown("**Market**  ")
+    st.write("Germany / Luxembourg day-ahead")
+    st.markdown("**Reference asset**  ")
+    st.write("1 MW / 2 MWh · 85% round-trip efficiency")
+    st.link_button("View source code", REPOSITORY_URL, use_container_width=True)
+    st.link_button("Read the research note", ARTICLE_URL, use_container_width=True)
+    st.divider()
+    st.caption("Independent research. Not investment advice or realised trading performance.")
 
 left, middle_left, middle_right, right = st.columns(4)
 left.metric("Backtest decisions", f"{summary['sample']['n_days_total']:,} days")
@@ -76,8 +119,21 @@ st.caption(
     "The 92.3% result uses a common 1,542-day sample; the 77.2% headline KPI uses the full sample."
 )
 
-tab_ladder, tab_explorer, tab_validation = st.tabs(
-    ["Forecast ladder", "Dispatch explorer", "Validation & limitations"]
+st.markdown(
+    """
+    <div class="brief">
+      <p><strong>Decision brief</strong></p>
+      <p>A D-1 persistence schedule captures 77.6% of the common-sample ceiling. Adding a
+      day-ahead residual-load forecast lifts capture to 92.3% and recovers 65.7% of the
+      forecast-value gap. The practical edge came from the information set and objective,
+      not from using the most complex model.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+tab_ladder, tab_explorer, tab_validation, tab_provenance = st.tabs(
+    ["Executive results", "Dispatch explorer", "Validation", "Data & methodology"]
 )
 
 with tab_ladder:
@@ -108,6 +164,17 @@ with tab_ladder:
     st.success(
         "The residual-load blend captured 92.3% of the ceiling and recovered "
         "65.7% of the D-1 persistence gap. A compact rolling OLS beat the GBM."
+    )
+    table = ladder[["label", "information_set", "n_days", "capture_pct", "gap_recovered_pct"]].copy()
+    table.columns = ["Model tier", "Information available before auction", "Days", "Capture (%)", "Gap recovered (%)"]
+    st.dataframe(
+        table,
+        hide_index=True,
+        use_container_width=True,
+        column_config={
+            "Capture (%)": st.column_config.NumberColumn(format="%.1f%%"),
+            "Gap recovered (%)": st.column_config.NumberColumn(format="%.1f%%"),
+        },
     )
 
 with tab_explorer:
@@ -192,4 +259,45 @@ with tab_validation:
     st.caption(
         "Research project by Heesun Joo · Python · cvxpy · pandas · scikit-learn · Plotly · "
         "Price data: ENTSO-E Transparency Platform (CC BY 4.0)"
+    )
+
+with tab_provenance:
+    st.subheader("Trace every headline to its source")
+    st.write(
+        "The public app is built from three versioned artifacts. The optimiser and model code "
+        "remain separate from presentation logic so the displayed KPIs can be reproduced in tests."
+    )
+    provenance = pd.DataFrame(
+        [
+            {"Layer": "Market prices", "Artifact": "data/public/da_prices.csv.gz", "Purpose": "Complete DE-LU hourly delivery days", "Source": "ENTSO-E Transparency"},
+            {"Layer": "Headline KPIs", "Artifact": "data/processed/kpi_summary.json", "Purpose": "Asset assumptions, revenue and capture", "Source": "Backtest pipeline"},
+            {"Layer": "Model ladder", "Artifact": "data/processed/forecast_gap_recovery.csv", "Purpose": "Common-sample tier comparison", "Source": "Walk-forward forecast evaluation"},
+        ]
+    )
+    st.dataframe(provenance, hide_index=True, use_container_width=True)
+    left_doc, right_doc = st.columns(2)
+    with left_doc:
+        st.markdown("#### Reproduction contract")
+        st.markdown(
+            """
+            1. Validate local data health.
+            2. Rebuild forecast tiers walk-forward.
+            3. Settle every fixed schedule against realised prices.
+            4. Regenerate the structured KPI artifacts.
+            5. Run the full test suite before publishing.
+            """
+        )
+    with right_doc:
+        st.markdown("#### Interpretation contract")
+        st.markdown(
+            """
+            - Perfect foresight is a ceiling, never a strategy.
+            - Every percentage is a simulated backtest result.
+            - Fundamental tiers remain an upper bound until point-in-time forecasts are rebuilt.
+            - No intraday, balancing, tax, grid-fee or realised P&L claim is included.
+            """
+        )
+    st.info(
+        "Current public milestone: historical monitor complete. Next milestone: publish genuine "
+        "point-in-time forward results after the paper-trading ledger has enough settled observations."
     )

@@ -2,6 +2,7 @@
 
 from dataclasses import asdict
 from datetime import date
+from pathlib import Path
 from typing import Dict
 
 import numpy as np
@@ -19,6 +20,15 @@ TIER_LABELS: Dict[str, str] = {
     "blend_rl": "Price + residual-load OLS",
 }
 
+TIER_INFORMATION: Dict[str, str] = {
+    "persist_d1": "Previous day's cleared price curve",
+    "persist_d7": "Same weekday's cleared price curve",
+    "blend": "D-1 and D-7 price curves",
+    "gbm": "Prices, residual load and calendar features",
+    "rl_quad": "Day-ahead residual-load forecast",
+    "blend_rl": "D-1, D-7 and residual-load forecast",
+}
+
 
 def forecast_ladder(findings: pd.DataFrame) -> pd.DataFrame:
     """Return presentation-ready capture and gap-recovery percentages."""
@@ -29,9 +39,24 @@ def forecast_ladder(findings: pd.DataFrame) -> pd.DataFrame:
 
     result = findings.loc[:, sorted(required)].copy()
     result["label"] = result["tier"].map(TIER_LABELS).fillna(result["tier"])
+    result["information_set"] = result["tier"].map(TIER_INFORMATION).fillna("Documented in repository")
     result["capture_pct"] = result["capture"] * 100
     result["gap_recovered_pct"] = result["gap_recovered_vs_persist_d1"] * 100
     return result
+
+
+def artifact_status(paths: list[Path]) -> dict:
+    """Summarise the versioned evidence backing the public dashboard."""
+    if not paths:
+        raise ValueError("at least one artifact is required")
+    missing = [path.name for path in paths if not path.is_file()]
+    existing = [path for path in paths if path.is_file()]
+    return {
+        "status": "ready" if not missing else "incomplete",
+        "artifact_count": len(existing),
+        "missing": missing,
+        "latest_modified": max((path.stat().st_mtime for path in existing), default=None),
+    }
 
 
 def available_dates(prices: pd.DataFrame) -> list:
