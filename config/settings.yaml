@@ -1,0 +1,45 @@
+# BESS arbitrage settings
+# Battery parameters are public assumptions (sources: NREL / Lazard LCOS reports, industry norms)
+
+battery:
+  # energy capacity (MWh); 2x P_max -> 2-hour battery
+  e_max_mwh: 2.0
+  # power rating (MW); max charge/discharge power
+  p_max_mw: 1.0
+  # round-trip efficiency; 0.85 is a common li-ion BESS assumption
+  # eta_ch * eta_dis = eta_rt, split symmetrically -> each sqrt(0.85) ~= 0.922
+  eta_round_trip: 0.85
+  # throughput/degradation cost (EUR per MWh cycled, charge + discharge)
+  # variable O&M + degradation proxy per Lazard LCOS; 0 = infinite-cycle assumption
+  throughput_cost_eur_mwh: 2.0
+  # start/end-of-day SoC (MWh); start and end each day empty (conservative)
+  soc_start_mwh: 0.0
+  soc_end_mwh: 0.0
+
+data:
+  # timezone of the tz-aware index (same as the source parquet)
+  timezone: "Europe/Berlin"
+  start_date: "2022-01-01"
+  end_date:   "2026-06-29"
+
+paths:
+  raw:
+    da_prices: "data/raw/da_prices.parquet"
+    # File formerly mistaken for intraday prices. Actually SMARD 4996 (Belgium DA)
+    # / 4997 (Norway NO2 DA). Not used in the backtest; kept only for the
+    # data-quality checks in src/data/validate.py.
+    neighbor_prices: "data/raw/id_prices.parquet"
+  processed:
+    dir: "data/processed"
+
+backtest:
+  # persistence-forecast lags (days) for the executable tiers
+  # 1 = same hour yesterday (D-1), 7 = same weekday last week
+  persistence_lags_days: [1, 7]
+  # rolling-OLS blend of the persistence curves (the first, cheapest
+  # "forecast model"): regress realized prices of the trailing window on
+  # their own D-1/D-7 curves, apply the weights to today's known curves
+  blend:
+    lags_days: [1, 7]
+    window_days: 90
+    min_days: 14

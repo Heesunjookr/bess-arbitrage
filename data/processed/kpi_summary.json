@@ -1,0 +1,95 @@
+{
+  "asset": {
+    "market": "DE-LU day-ahead",
+    "e_max_mwh": 2.0,
+    "p_max_mw": 1.0,
+    "eta_round_trip": 0.85,
+    "throughput_cost_eur_mwh": 2.0
+  },
+  "sample": {
+    "years": [
+      2022,
+      2023,
+      2024,
+      2025,
+      2026
+    ],
+    "n_days_total": 1632
+  },
+  "full_sample_mean": {
+    "pf_da_eur_per_mw_yr": 69166.0,
+    "persist_d1_eur_per_mw_yr": 53432.0,
+    "blend_eur_per_mw_yr": 55844.0,
+    "capture_persist_d1": 0.772,
+    "capture_blend": 0.808,
+    "forecast_value_gap_d1_eur_per_mw_yr": 15733.0,
+    "forecast_value_gap_blend_eur_per_mw_yr": 13321.0
+  },
+  "by_year": {
+    "2022": {
+      "pf_da_per_mw": 88593.29,
+      "blend_per_mw": 65496.824,
+      "capture_blend": 0.739,
+      "gap_blend": 23096.466,
+      "persist_d1_per_mw": 61731.689,
+      "capture_persist_d1": 0.697,
+      "gap_persist_d1": 26861.601,
+      "persist_d7_per_mw": 65086.336,
+      "capture_persist_d7": 0.735,
+      "gap_persist_d7": 23506.953,
+      "cycles_pf_da": 554.264
+    },
+    "2023": {
+      "pf_da_per_mw": 48558.209,
+      "blend_per_mw": 37356.313,
+      "capture_blend": 0.769,
+      "gap_blend": 11201.896,
+      "persist_d1_per_mw": 35151.109,
+      "capture_persist_d1": 0.724,
+      "gap_persist_d1": 13407.1,
+      "persist_d7_per_mw": 37536.325,
+      "capture_persist_d7": 0.773,
+      "gap_persist_d7": 11021.885,
+      "cycles_pf_da": 556.586
+    },
+    "2024": {
+      "pf_da_per_mw": 60583.236,
+      "blend_per_mw": 50922.44,
+      "capture_blend": 0.841,
+      "gap_blend": 9660.795,
+      "persist_d1_per_mw": 47317.32,
+      "capture_persist_d1": 0.781,
+      "gap_persist_d1": 13265.916,
+      "persist_d7_per_mw": 48369.612,
+      "capture_persist_d7": 0.798,
+      "gap_persist_d7": 12213.624,
+      "cycles_pf_da": 566.626
+    },
+    "2025": {
+      "pf_da_per_mw": 68587.335,
+      "blend_per_mw": 56893.379,
+      "capture_blend": 0.83,
+      "gap_blend": 11693.957,
+      "persist_d1_per_mw": 55522.818,
+      "capture_persist_d1": 0.81,
+      "gap_persist_d1": 13064.517,
+      "persist_d7_per_mw": 57044.2,
+      "capture_persist_d7": 0.832,
+      "gap_persist_d7": 11543.135,
+      "cycles_pf_da": 547.748
+    },
+    "2026": {
+      "pf_da_per_mw": 79506.156,
+      "blend_per_mw": 68552.94,
+      "capture_blend": 0.862,
+      "gap_blend": 10953.217,
+      "persist_d1_per_mw": 67439.041,
+      "capture_persist_d1": 0.848,
+      "gap_persist_d1": 12067.115,
+      "persist_d7_per_mw": 63960.737,
+      "capture_persist_d7": 0.804,
+      "gap_persist_d7": 15545.419,
+      "cycles_pf_da": 519.365
+    }
+  }
+}

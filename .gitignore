@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+data/raw/*.parquet
+data/bess.duckdb
+data/paper/
+.env
+.env.*
+*.pem
+*.key
+
+# job-application prep material — keep out of the public repo
+interview-qa.md
+blog-post-ko.md
+blog-post-en.md
+application-suena.md
+scripts/com.hs.bess-paper.plist
