@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import gzip
+import hashlib
 import json
 import shutil
 from collections import defaultdict
@@ -37,10 +38,16 @@ def build() -> Path:
     if OUT.exists():
         shutil.rmtree(OUT)
     shutil.copytree(SOURCE, OUT)
+    app_hash = hashlib.sha256((OUT / "app.js").read_bytes()).hexdigest()[:12]
+    index = OUT / "index.html"
+    index.write_text(
+        index.read_text(encoding="utf-8").replace("__BUILD_ID__", app_hash),
+        encoding="utf-8",
+    )
     (OUT / "prices.json").write_text(
         json.dumps(build_price_bundle(), separators=(",", ":")), encoding="utf-8"
     )
-    return OUT / "index.html"
+    return index
 
 
 if __name__ == "__main__":

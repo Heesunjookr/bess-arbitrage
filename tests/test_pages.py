@@ -15,6 +15,8 @@ def test_pages_build_contains_interactive_assets():
     target = build()
     assert target.is_file()
     assert "Run dispatch" in target.read_text()
+    assert "__BUILD_ID__" not in target.read_text()
+    assert "app.js?build=" in target.read_text()
     assert (target.parent / "app.js").is_file()
     payload = json.loads((target.parent / "prices.json").read_text())
     assert payload["days"]
