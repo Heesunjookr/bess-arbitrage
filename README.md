@@ -5,10 +5,11 @@
 > forecast tiers. See [BUILDING_IN_PUBLIC.md](BUILDING_IN_PUBLIC.md) for the
 > live roadmap, evidence standard and public changelog.
 
-[![Deploy on Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=https://github.com/Heesunjookr/bess-arbitrage)
+[![Live Monitor](https://img.shields.io/badge/Live-GitHub%20Pages-197A54)](https://heesunjookr.github.io/bess-arbitrage/)
 
-Deployment entrypoint: `app.py` on `main`. The app requires no secrets, API
-keys, database server, or private data.
+GitHub Actions builds the zero-backend public monitor from the same versioned
+KPI artifacts used by the Streamlit research explorer. `app.py` remains the
+local interactive edition. Neither edition requires secrets or private data.
 
 Linear-programming optimization of **battery energy storage (BESS) price arbitrage** in the German (DE-LU) day-ahead market, with an explicit, honest separation between the *perfect-foresight ceiling* and what is *actually executable* with information available at bid time.
 
