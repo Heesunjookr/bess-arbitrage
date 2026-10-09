@@ -148,7 +148,7 @@ def ingest_prices(con: duckdb.DuckDBPyConnection,
     con.execute(
         """
         CREATE OR REPLACE TABLE %s AS
-        SELECT "__index_level_0__" AS ts, da_price
+        SELECT ts, da_price
         FROM read_parquet('%s')
         """ % (RAW_TABLE, parquet)
     )

@@ -1,7 +1,7 @@
 {
-  "break_even_price_eur_mwh": -51.3,
-  "negative_price_days": 300,
-  "days_with_simultaneous_cd": 58,
-  "hours_with_simultaneous_cd": 152,
-  "net_pair_revenue_eur": -7.3
+  "break_even_price_eur_mwh": -24.7,
+  "negative_price_days": 330,
+  "days_with_simultaneous_cd": 0,
+  "hours_with_simultaneous_cd": 0,
+  "net_pair_revenue_eur": 0.0
 }

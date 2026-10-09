@@ -52,7 +52,7 @@ st.markdown(
       <p>A public decision tool that converts day-ahead forecast quality into dispatch value,
       compares executable model tiers, and exposes the assumptions behind every result.</p>
       <div class="trust-row">
-        <span class="trust-chip">1,632 delivery days</span>
+        <span class="trust-chip">1,731 delivery days</span>
         <span class="trust-chip">No-lookahead schedules</span>
         <span class="trust-chip">Open methodology</span>
         <span class="trust-chip">Tested optimisation</span>
@@ -100,8 +100,8 @@ with st.sidebar:
     st.write("Germany / Luxembourg day-ahead")
     st.markdown("**Reference asset**  ")
     st.write("1 MW / 2 MWh · 85% round-trip efficiency")
-    st.link_button("View source code", REPOSITORY_URL, use_container_width=True)
-    st.link_button("Read the research note", ARTICLE_URL, use_container_width=True)
+    st.link_button("View source code", REPOSITORY_URL, width="stretch")
+    st.link_button("Read the research note", ARTICLE_URL, width="stretch")
     st.divider()
     st.caption("Independent research. Not investment advice or realised trading performance.")
 
@@ -116,15 +116,15 @@ right.metric(
 
 st.caption(
     "All headline values are simulated backtest results, not realised trading revenue. "
-    "The 92.3% result uses a common 1,542-day sample; the 77.2% headline KPI uses the full sample."
+    "The 94.5% result uses a common 1,640-day sample; full-sample KPIs use every eligible day."
 )
 
 st.markdown(
     """
     <div class="brief">
       <p><strong>Decision brief</strong></p>
-      <p>A D-1 persistence schedule captures 77.6% of the common-sample ceiling. Adding a
-      day-ahead residual-load forecast lifts capture to 92.3% and recovers 65.7% of the
+      <p>A D-1 persistence schedule captures 82.3% of the common-sample ceiling. Adding a
+      day-ahead residual-load forecast lifts capture to 94.5% and recovers 69.2% of the
       forecast-value gap. The practical edge came from the information set and objective,
       not from using the most complex model.</p>
     </div>
@@ -160,17 +160,17 @@ with tab_ladder:
         xaxis_range=[70, 100],
         height=430,
     )
-    st.plotly_chart(chart, use_container_width=True)
+    st.plotly_chart(chart, width="stretch")
     st.success(
-        "The residual-load blend captured 92.3% of the ceiling and recovered "
-        "65.7% of the D-1 persistence gap. A compact rolling OLS beat the GBM."
+        "The residual-load blend captured 94.5% of the ceiling and recovered "
+        "69.2% of the D-1 persistence gap. A compact rolling OLS beat the GBM."
     )
     table = ladder[["label", "information_set", "n_days", "capture_pct", "gap_recovered_pct"]].copy()
     table.columns = ["Model tier", "Information available before auction", "Days", "Capture (%)", "Gap recovered (%)"]
     st.dataframe(
         table,
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
         column_config={
             "Capture (%)": st.column_config.NumberColumn(format="%.1f%%"),
             "Gap recovered (%)": st.column_config.NumberColumn(format="%.1f%%"),
@@ -236,7 +236,7 @@ with tab_explorer:
                 legend={"orientation": "h", "y": 1.12},
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", height=470,
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 with tab_validation:
     st.subheader("The credibility layer")
@@ -274,7 +274,7 @@ with tab_provenance:
             {"Layer": "Model ladder", "Artifact": "data/processed/forecast_gap_recovery.csv", "Purpose": "Common-sample tier comparison", "Source": "Walk-forward forecast evaluation"},
         ]
     )
-    st.dataframe(provenance, hide_index=True, use_container_width=True)
+    st.dataframe(provenance, hide_index=True, width="stretch")
     left_doc, right_doc = st.columns(2)
     with left_doc:
         st.markdown("#### Reproduction contract")

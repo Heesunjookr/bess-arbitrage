@@ -9,9 +9,10 @@ construction. From here on, capture ratios accumulate out of sample.
 
 Daily cycle (one cron/launchd run, ideally ~11:00-11:45 Europe/Berlin):
 
-  1. Fetch the trailing ~110 days of DA prices (SMARD 4169) and the TSO
-     day-ahead forecasts (411/125/123/3791) — enough history to calibrate
-     the 90-day rolling tiers. Stateless: no local cache to corrupt.
+  1. Fetch the trailing ~110 days of DA prices (SMARD 4169) and the public
+     TSO forecasts (411/125/123/3791). The price-only tiers are always
+     eligible; fundamental tiers trade only when a complete delivery-day
+     forecast is actually present before gate closure.
   2. Settle every frozen bid whose delivery-day prices are now published:
      schedule (frozen) x realized prices, vs. the perfect-foresight LP on
      the same day. Append to the ledger.
@@ -118,6 +119,12 @@ def fetch_live_frame(cfg: Optional[dict] = None, days_back: int = 110,
         cols[name] = fetch_series(fid, start_ms, end_ms)
     df = pd.DataFrame(cols)
     df.index = df.index.tz_convert(tz)
+    # Materialise tomorrow's delivery hours even when the public fundamental
+    # feeds have not published values yet. This lets price-only D-1/blend
+    # tiers freeze a legitimate schedule while fundamental tiers remain
+    # explicitly no_forecast.
+    full_index = pd.date_range(start, end - pd.Timedelta(hours=1), freq="1h", tz=tz)
+    df = df.reindex(full_index)
     df["residual_load_fc"] = (df["load_fc"] - df["pv_fc"]
                               - df["wind_on_fc"] - df["wind_off_fc"])
     df["date"] = df.index.date
@@ -163,15 +170,18 @@ def create_bid(df: pd.DataFrame, p: BatteryParams,
         return None
 
     day = df[df["date"] == delivery]
-    if len(day) != 24 or not np.isfinite(day["residual_load_fc"]).all():
-        logger.warning("no complete forecast data for %s — skipping bid", delivery)
+    if len(day) != 24:
+        logger.warning("no complete hourly delivery-day frame for %s — skipping bid", delivery)
         return None
 
     tiers = {}
     for tier, fc in build_tier_forecasts(df).items():
         f = fc.loc[day.index].to_numpy(dtype=float)
         if not np.isfinite(f).all():
-            tiers[tier] = {"status": "no_forecast"}
+            tiers[tier] = {
+                "status": "no_forecast",
+                "reason": "required inputs were not published before gate closure",
+            }
             continue
         plan = solve_day(f, p)
         tiers[tier] = {

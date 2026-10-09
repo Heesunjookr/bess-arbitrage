@@ -1,31 +1,26 @@
 """
 lp_artifact_check.py
 --------------------
-Quantify the LP's simultaneous charge+discharge artifact.
+Verify that the dispatch solver prevents simultaneous charge and discharge.
 
-The per-day LP has no binary variable forbidding simultaneous charging and
-discharging (that would make it a MILP). Physically a battery does one or
-the other; in the LP the combination burns energy through the round-trip
-loss — and burning energy is *paid* when prices are negative. Per MWh of
-paired flow (c = d = q) the net effect is
+The unconstrained formulation can burn energy through the round-trip loss
+while being paid at negative prices. A SoC-neutral loop with grid import c=q
+and grid export d=q*eta_rt has net value
 
-    q * ( -price * (1 - eta_dis) - 2 * lambda )
+    q * ( -price * (1 - eta_rt) - lambda * (1 + eta_rt) )
 
 so the artifact only turns profitable below
 
-    price < -2 * lambda / (1 - eta_dis)
+    price < -lambda * (1 + eta_rt) / (1 - eta_rt)
 
-≈ -51 EUR/MWh with the default eta_rt = 0.85, lambda = 2 EUR/MWh. Milder
-negative prices leave it at or below break-even, where the solver may still
-return overlapping flows as one of many optimal (degenerate) solutions.
+≈ -25 EUR/MWh with the default eta_rt = 0.85, lambda = 2 EUR/MWh. `solve_day`
+therefore activates a binary charge/discharge mode on negative-price days.
+This report is a regression audit: overlap days and pair revenue must be zero.
 
-This script scans every negative-price day in the sample, reports where the
-solver used simultaneous flows and what they contributed to revenue. On the
-full 2022–2026 sample the result is: ~300 negative-price days, overlap on
-~58 of them (~150 hours), net contribution ≈ -7 EUR over 4.5 years —
-solver degeneracy, not a revenue exploit. Hence a plain LP is the right
-tool for this study; a real dispatch system would add the binaries or net
-out overlapping flows in post-processing.
+This script scans every negative-price day in the sample and fails visibly
+through its reported metrics if the production solver ever returns overlapping
+flows. The current full-sample result is 330 negative-price days with zero
+overlap days, zero overlap hours and zero pair revenue.
 
 Run:  python -m src.backtest.lp_artifact_check   (~40s)
 """
@@ -47,7 +42,8 @@ TOL_MW = 1e-4  # flows below this are solver noise, not dispatch
 
 def break_even_price(p: BatteryParams) -> float:
     """Price below which simultaneous charge+discharge becomes profitable."""
-    return -2.0 * p.throughput_cost_eur_mwh / (1.0 - p.eta_dis)
+    return (-p.throughput_cost_eur_mwh * (1.0 + p.eta_round_trip)
+            / (1.0 - p.eta_round_trip))
 
 
 def scan(df: Optional[pd.DataFrame] = None,
@@ -79,10 +75,13 @@ def scan(df: Optional[pd.DataFrame] = None,
         if both.any():
             overlap_days += 1
             overlap_hours += int(both.sum())
-            pair = np.minimum(r.charge[both], r.discharge[both])
+            pair_charge = np.minimum(
+                r.charge[both], r.discharge[both] / p.eta_round_trip)
+            pair_discharge = pair_charge * p.eta_round_trip
             pair_revenue += float(
-                np.sum(prices[both] * pair * (p.eta_dis - 1.0))
-                - p.throughput_cost_eur_mwh * 2.0 * pair.sum()
+                np.sum(prices[both] * (pair_discharge - pair_charge))
+                - p.throughput_cost_eur_mwh
+                * np.sum(pair_charge + pair_discharge)
             )
 
     result = {
@@ -104,7 +103,9 @@ if __name__ == "__main__":
         json.dump(result, f, indent=2)
     print(json.dumps(result, indent=2))
     print(
-        "\nInterpretation: simultaneous charge+discharge only pays below "
-        "%.0f EUR/MWh;\nits net contribution above is ~0 -> degenerate "
-        "solutions, not a revenue exploit." % result["break_even_price_eur_mwh"]
+        "\nInterpretation: the unconstrained formulation would create an "
+        "artifact below %.0f EUR/MWh.\nThe production dispatch returned %d "
+        "overlap hours; this regression audit must remain zero."
+        % (result["break_even_price_eur_mwh"],
+           result["hours_with_simultaneous_cd"])
     )

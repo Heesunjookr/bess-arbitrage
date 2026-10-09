@@ -12,7 +12,7 @@ function optimise(prices,p){
     for(let from=0;from<=levels;from++) if(Number.isFinite(value[from])) for(let to=0;to<=levels;to++){
       const delta=(to-from)*step, charge=delta>0?delta/eta:0, discharge=delta<0?-delta*eta:0;
       if(charge>p.power+1e-9||discharge>p.power+1e-9) continue;
-      const reward=prices[t]*discharge*eta-prices[t]*charge-p.cost*(charge+discharge);
+      const reward=prices[t]*discharge-prices[t]*charge-p.cost*(charge+discharge);
       if(value[from]+reward>next[to]){next[to]=value[from]+reward;parent[to]=from;}
     }
     value=next; parents.push(parent);
@@ -21,7 +21,7 @@ function optimise(prices,p){
   for(let t=n-1;t>=0;t--){const from=parents[t][state],delta=(state-from)*step;rows.unshift({charge:delta>0?delta/eta:0,discharge:delta<0?-delta*eta:0,soc:state*step});state=from;}
   return rows;
 }
-function settle(prices,schedule,p){return schedule.reduce((sum,r,i)=>sum+prices[i]*r.discharge*Math.sqrt(p.efficiency)-prices[i]*r.charge-p.cost*(r.charge+r.discharge),0);}
+function settle(prices,schedule,p){return schedule.reduce((sum,r,i)=>sum+prices[i]*r.discharge-prices[i]*r.charge-p.cost*(r.charge+r.discharge),0);}
 function path(values,x,y,w,h,min,max){return values.map((v,i)=>`${i?'L':'M'} ${x+i*w/(values.length-1)} ${y+h-(v-min)/(max-min||1)*h}`).join(' ');}
 function renderChart(actual,forecast,schedule){
   const svg=$('dispatchChart'),x=54,y=25,w=805,h=285,prices=[...actual,...forecast],min=Math.min(...prices),max=Math.max(...prices),maxP=Math.max(...schedule.map(r=>Math.abs(r.discharge-r.charge)),1);

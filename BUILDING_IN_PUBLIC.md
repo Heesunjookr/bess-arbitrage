@@ -12,7 +12,7 @@ problem and the same information cutoff?
 
 ## Current public milestone
 
-- Interactive forecast-value ladder on a common 1,542-day sample.
+- Interactive forecast-value ladder on a common 1,640-day sample.
 - One-day dispatch explorer with configurable power, duration, efficiency and
   throughput cost.
 - Versioned public price data, KPI artifacts and model-comparison table.

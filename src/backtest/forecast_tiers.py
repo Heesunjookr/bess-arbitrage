@@ -1,7 +1,7 @@
 """
 forecast_tiers.py
 -----------------
-Evaluate the src/forecast/ tiers through the same LP dispatch harness as the
+Evaluate the src/forecast/ tiers through the same dispatch harness as the
 persistence tiers, and report how much of the forecast-value gap each one
 recovers.
 

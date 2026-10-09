@@ -1,7 +1,8 @@
 """
 lp_dispatch.py
 --------------
-Battery arbitrage as a linear program.
+Battery arbitrage as a linear program, with a mixed-integer exclusivity
+constraint on negative-price days.
 
 One battery is dispatch-optimized over a single day (24h window).
 
@@ -11,8 +12,8 @@ Decision variables (per hour t):
   s_t      : state of charge (MWh)
 
 Objective (maximize revenue):
-  max  sum_t [ price_t * d_t * eta_dis - price_t * c_t ]  -  lambda * sum_t (c_t + d_t)
-       (discharge revenue)   (charging cost)                 (throughput/degradation penalty)
+  max  sum_t [ price_t * d_t - price_t * c_t ]  -  lambda * sum_t (c_t + d_t)
+       (grid export revenue) (grid import cost)                (throughput/degradation penalty)
 
 Constraints:
   SoC dynamics:  s_t = s_{t-1} + c_t * eta_ch - d_t / eta_dis
@@ -83,7 +84,10 @@ def _settled_revenue(
     p: BatteryParams,
 ) -> float:
     """Net revenue (EUR) of a given dispatch settled at `prices`."""
-    gross = np.sum(prices * discharge * p.eta_dis - prices * charge)
+    # charge/discharge are AC-side grid flows. Efficiency belongs in the SoC
+    # balance, not in settlement; multiplying discharge by eta_dis here would
+    # apply the discharge loss twice.
+    gross = np.sum(prices * discharge - prices * charge)
     penalty = p.throughput_cost_eur_mwh * np.sum(charge + discharge)
     return float(gross - penalty)
 
@@ -106,7 +110,15 @@ def solve_day(
     d = cp.Variable(T, nonneg=True, name="discharge")
     s = cp.Variable(T, name="soc")
 
-    revenue = cp.sum(cp.multiply(prices, d) * p.eta_dis - cp.multiply(prices, c))
+    # With sufficiently negative prices, a continuous LP can earn artificial
+    # revenue by charging and discharging simultaneously to dissipate energy.
+    # A battery cannot do both at once.  Positive-price days do not need the
+    # binaries (losses and throughput cost already make overlap dominated), so
+    # keep the fast LP there and use a MILP only where the artifact can occur.
+    exclusive_mode = bool(np.any(prices < 0.0))
+    mode = cp.Variable(T, boolean=True, name="charge_mode") if exclusive_mode else None
+
+    revenue = cp.sum(cp.multiply(prices, d) - cp.multiply(prices, c))
     penalty = p.throughput_cost_eur_mwh * cp.sum(c + d)
     objective = cp.Maximize(revenue - penalty)
 
@@ -116,6 +128,11 @@ def solve_day(
         s >= 0,
         s <= p.e_max_mwh,
     ]
+    if mode is not None:
+        cons.extend([
+            c <= p.p_max_mw * mode,
+            d <= p.p_max_mw * (1.0 - mode),
+        ])
     # SoC dynamics (dt=1h): s_0 = soc_start + c_0*eta_ch - d_0/eta_dis
     cons.append(s[0] == p.soc_start_mwh + c[0] * p.eta_ch - d[0] / p.eta_dis)
     for t in range(1, T):
@@ -124,7 +141,10 @@ def solve_day(
     cons.append(s[T - 1] == p.soc_end_mwh)
 
     prob = cp.Problem(objective, cons)
-    prob.solve(solver=solver)
+    # SCIPY/HiGHS is the installed mixed-integer solver in the reproducible
+    # environment.  Preserve explicit solver selection for ordinary LP days.
+    chosen_solver = cp.SCIPY if mode is not None and solver is None else solver
+    prob.solve(solver=chosen_solver)
 
     if c.value is None:
         # infeasible/failed solve (rare): fall back to doing nothing

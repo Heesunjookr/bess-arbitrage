@@ -35,6 +35,12 @@ def _live_frame(now):
     return df
 
 
+def _price_only_live_frame(now):
+    df = _live_frame(now)
+    df.loc[df.index[-24:], "residual_load_fc"] = np.nan
+    return df
+
+
 def test_bid_refused_after_gate_closure(tmp_path, monkeypatch):
     monkeypatch.setattr(pt, "ROOT", tmp_path)
     now = pd.Timestamp("2026-07-04 13:00", tz="Europe/Berlin")
@@ -67,3 +73,14 @@ def test_bid_not_created_twice(tmp_path, monkeypatch):
     mtime = p1.stat().st_mtime_ns
     p2 = pt.create_bid(df, _params(), now=now + pd.Timedelta(minutes=30))
     assert p2 == p1 and p2.stat().st_mtime_ns == mtime
+
+
+def test_price_tiers_are_frozen_when_public_fundamentals_are_late(tmp_path, monkeypatch):
+    monkeypatch.setattr(pt, "ROOT", tmp_path)
+    now = pd.Timestamp("2026-07-04 10:30", tz="Europe/Berlin")
+    path = pt.create_bid(_price_only_live_frame(now), _params(), now=now)
+    bid = json.loads(path.read_text())
+    assert bid["tiers"]["persist_d1"]["status"] == "optimal"
+    assert bid["tiers"]["blend"]["status"] == "optimal"
+    assert bid["tiers"]["rl_quad"]["status"] == "no_forecast"
+    assert bid["tiers"]["blend_rl"]["status"] == "no_forecast"

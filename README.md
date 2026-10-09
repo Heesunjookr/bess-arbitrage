@@ -21,27 +21,27 @@ This mirrors the skepticism of a sibling study on ML forecasting of the German D
 
 ## Key Findings
 
-All figures are **EUR per MW of installed power per year**, for a standard **2 MWh / 1 MW (2-hour) lithium-ion battery**, round-trip efficiency 0.85, throughput cost 2 EUR/MWh. DE-LU day-ahead auction, 2022-01 → 2026-06, 1,632 complete trading days (partial years annualized to 365 days).
+All figures are **EUR per MW of installed power per year**, for a standard **2 MWh / 1 MW (2-hour) lithium-ion battery**, round-trip efficiency 0.85, throughput cost 2 EUR/MWh. DE-LU day-ahead auction, 2022-01 → 2026-10-09, 1,731 complete trading days (partial years annualized to 365 days).
 
 | Year | Perfect foresight (ceiling) | Persistence D-1 | Persistence D-7 | Blend D-1/D-7 (rolling OLS) | Capture (D-1 / PF) | Capture (blend / PF) | Forecast-value gap (PF − D-1) |
 |------|------:|------:|------:|------:|------:|------:|------:|
-| 2022 | 88,593 | 61,732 | 65,086 | 65,497 | 70% | 74% | 26,862 |
-| 2023 | 48,558 | 35,151 | 37,536 | 37,356 | 72% | 77% | 13,407 |
-| 2024 | 60,583 | 47,317 | 48,370 | 50,922 | 78% | 84% | 13,266 |
-| 2025 | 68,587 | 55,523 | 57,044 | 56,893 | 81% | 83% | 13,065 |
-| 2026 (H1) | 79,506 | 67,439 | 63,961 | 68,553 | 85% | 86% | 12,067 |
+| 2022 | 115,393 | 88,949 | 92,923 | 93,939 | 77% | 81% | 26,444 |
+| 2023 | 59,660 | 46,619 | 49,139 | 49,712 | 78% | 83% | 13,041 |
+| 2024 | 71,090 | 57,432 | 58,931 | 61,394 | 81% | 86% | 13,658 |
+| 2025 | 80,074 | 67,042 | 68,686 | 68,154 | 84% | 85% | 13,033 |
+| 2026 (to Oct 9) | 101,991 | 89,549 | 88,731 | 92,672 | 88% | 91% | 12,442 |
 
-All executable tiers (D-1, D-7, blend) use only information available at the D-1 12:00 auction. Full-sample average: ceiling ≈ 69.2k, persistence D-1 ≈ 53.4k, blend ≈ 55.8k EUR/MW/yr; capture 77% (D-1) / 81% (blend); gap ≈ 15.7k (D-1) / 13.3k (blend) EUR/MW/yr (see `data/processed/kpi_summary.json`).
+All executable tiers (D-1, D-7, blend) use only information available at the D-1 12:00 auction. Full-sample mean: ceiling ≈ 85.6k, persistence D-1 ≈ 69.9k, blend ≈ 73.2k EUR/MW/yr; capture 81.5% (D-1) / 85.4% (blend); gap ≈ 15.7k (D-1) / 12.5k (blend) EUR/MW/yr (see `data/processed/kpi_summary.json`).
 
 *Note on 2026: since 2025-10-01 the DA auction clears in 15-minute periods; these figures use hourly averages, which smooth intra-hour spread — the 2026 ceiling is therefore conservative (see Limitations).*
 
-### 1. Naive bidding already captures 70–85% of the ceiling — and the share is rising
+### 1. Naive bidding already captures 77–88% of the ceiling — and the share is rising
 
-A bidder who simply re-submits yesterday's price shape captures 70% (2022) → 85% (2026 H1) of perfect foresight. Post-crisis DE-LU prices have become more *autocorrelated and shape-regular* (solar-driven midday trough, morning/evening peaks), so the naive forecast keeps improving. The structural "duck curve" is the dominant, predictable signal — the same lesson as da-id, where most edge was structural, not model-driven.
+A bidder who simply re-submits yesterday's price shape captures 77% (2022) → 88% (2026 through October 9) of perfect foresight. Post-crisis DE-LU prices have become more *autocorrelated and shape-regular* (solar-driven midday trough, morning/evening peaks), so the naive forecast keeps improving. The structural "duck curve" is the dominant, predictable signal — the same lesson as da-id, where most edge was structural, not model-driven.
 
 ### 2. The gap is the price of forecasting
 
-Perfect price knowledge is worth **12k–27k EUR/MW/yr** over naive persistence (≈ 15.7k on average, ~23% of the ceiling). That is the rational budget for forecasting quality in day-ahead bidding — and an upper bound on what any DA price model can ever add for this asset.
+Perfect price knowledge is worth **12k–26k EUR/MW/yr** over naive persistence (≈ 15.7k on average, ~18% of the ceiling). That is the rational budget for forecasting quality in day-ahead bidding — and an upper bound on what any DA price model can ever add for this asset.
 
 ### 3. The first, cheapest forecast model — a rolling-OLS blend — recovers ~15% of the gap
 
@@ -83,24 +83,24 @@ Before modeling, map the enemy (`src/backtest/gap_analysis.py`). Two results, fu
 
 ### 7. Fundamental features recover two-thirds of the gap
 
-The D-1-known information set is bigger than lagged prices: the TSOs publish **day-ahead forecasts of load, PV and wind** before the auction (SMARD filters 411/125/123/3791), and residual load (load − wind − solar) is what actually walks the merit-order curve. Two fundamental tiers (`src/forecast/`), same rolling-OLS walk-forward protocol as the blend, plus a walk-forward gradient-boosted model — all evaluated through the same LP, on the **common** 1,542 days where every tier trades:
+The D-1-known information set is bigger than lagged prices: the TSOs publish **day-ahead forecasts of load, PV and wind** before the auction (SMARD filters 411/125/123/3791), and residual load (load − wind − solar) is what actually walks the merit-order curve. Two fundamental tiers (`src/forecast/`), same rolling-OLS walk-forward protocol as the blend, plus a walk-forward gradient-boosted model — all evaluated through the same dispatch model, on the **common** 1,640 days where every tier trades:
 
 | Tier | Information set | Capture | Gap recovered vs persist_d1 |
 |------|-----------------|--------:|--------------------------:|
-| persist_d1 | D-1 price curve | 77.6% | — (baseline) |
-| persist_d7 | D-7 price curve | 79.6% | 9% |
-| blend | D-1 + D-7 curves, rolling OLS | 81.9% | 19% |
-| gbm | all below + calendar, HistGradientBoosting | 86.8% | 41% |
-| rl_quad | **residual-load forecast only** (RL + RL²) | 89.8% | 55% |
-| gbm_shape | gbm retrained on the demeaned daily curve | 90.2% | 56% |
-| blend_rl | D-1 + D-7 + RL + RL² , rolling OLS | **92.3%** | **66%** |
+| persist_d1 | D-1 price curve | 82.3% | — (baseline) |
+| persist_d7 | D-7 price curve | 84.3% | 11% |
+| blend | D-1 + D-7 curves, rolling OLS | 86.4% | 23% |
+| gbm | all below + calendar, HistGradientBoosting | 88.3% | 34% |
+| rl_quad | **residual-load forecast only** (RL + RL²) | 92.5% | 58% |
+| gbm_shape | gbm retrained on the demeaned daily curve | 92.6% | 58% |
+| blend_rl | D-1 + D-7 + RL + RL², rolling OLS | **94.5%** | **69%** |
 
 Three observations worth defending in an interview:
 
 1. **`rl_quad` uses no price history at all** — two regressors and an intercept, refit daily on a 90-day window — and it beats everything price-based. The DA price *shape* is not an autoregressive object; it is a merit-order readout of residual load. Feature choice beat model class.
-2. **The GBM, given strictly more information, loses to a 4-regressor OLS.** Plausible reasons: it optimizes squared error on *levels* (finding 4 says levels are worthless), and it refits every 30 days on a 365-day window while the OLS re-calibrates daily on 90 days, so it drags stale regimes. The first hypothesis was tested directly: retraining the same GBM on the *demeaned* daily curve — telling it the game is shape, not level — lifts it from 86.8% to 90.2% capture (`gbm_shape`), closing most of its deficit in one move. It still trails `blend_rl`; a true ranking loss and faster refits are the next iterations. The honest headline stands either way: in this problem, one good fundamental feature and the right objective are worth more than model complexity.
-3. **Weather-forecast *error* costs the fundamental tiers almost nothing in day-ahead.** A diagnostic tier running the rl_quad protocol on *realized* residual load (`rl_quad_pw`, "perfect weather") captures **88.5% — less than the forecast-based 89.8%**. Counterintuitive until you remember who sets the price: every auction participant bids off the same public TSO forecasts, so the DA price is a function of the *forecast*, not of the weather that later happens. Forecast errors get repriced in intraday and balancing, not in the DA auction. Two consequences: (a) better weather data is *not* where the remaining DA gap lives — the residual ~8% is mapping error (merit-order curvature drift, fuel prices, flows); and (b) this doubles as a leakage test: if the SMARD "forecasts" had been quietly revised toward actuals, actuals would have scored *higher*, not lower.
-4. Per-year capture of `blend_rl` is monotone-rising: 90.9% (2022) → 96.5% (2026 H1). Given observation 3, the residual ~5–9% is mostly price-mapping error (merit-order drift, fuel prices, outages, flows) rather than weather uncertainty.
+2. **The GBM, given strictly more information, loses to a 4-regressor OLS.** Plausible reasons: it optimizes squared error on *levels* (finding 4 says levels are worthless), and it refits every 30 days on a 365-day window while the OLS re-calibrates daily on 90 days, so it drags stale regimes. Retraining the same GBM on the *demeaned* daily curve lifts it from 88.3% to 92.6% capture (`gbm_shape`), but it still trails `blend_rl`. In this problem, one good fundamental feature and the right objective are worth more than model complexity.
+3. **Weather-forecast *error* costs the fundamental tiers almost nothing in day-ahead.** A diagnostic tier running the rl_quad protocol on *realized* residual load (`rl_quad_pw`, "perfect weather") captures **91.4% — less than the forecast-based 92.5%**. Counterintuitive until you remember who sets the price: every auction participant bids off the same public TSO forecasts, so the DA price is a function of the *forecast*, not of the weather that later happens. Forecast errors get repriced in intraday and balancing, not in the DA auction. This also acts as a leakage diagnostic: if the published forecasts were mislabeled copies of actuals, actual weather should have scored higher.
+4. Per-year `blend_rl` capture ranges from 93.0% in 2023 to 97.4% in 2026. The remaining common-sample gap is therefore about 5.5%, mostly consistent with price-mapping error such as merit-order drift, fuel prices, outages and flows rather than missing weather information.
 
 **Caveat (documented in `fetch_smard_forecasts.py`):** SMARD serves the *latest* snapshot of the TSO day-ahead forecast series without publication timestamps. These series are day-ahead publications by ENTSO-E convention, but revisions cannot be ruled out from SMARD alone — so treat the fundamental-tier numbers as an upper bound pending a point-in-time rebuild from ENTSO-E transparency data.
 
@@ -117,9 +117,9 @@ Late June 2026: record European heat, AC load surge, French nuclear river-temper
 
 Two lessons. First, a heatwave is a battery's best week — the prize nearly doubles (solar keeps the midday trough down while AC load and thermal derates lift the evening peak). Second — and against the naive narrative — **persistence captured 98.6% *inside* the event**: consecutive heatwave days resemble each other, so once the regime is established, yesterday's curve is an excellent forecast. The money for a forecast is at the **transitions** (onset/offset), exactly where finding 6 located the gap. Extreme *levels* are not the problem; *change* is.
 
-## Live paper trading (started 2026-07-05)
+## Manual forward paper trading
 
-The forward test of everything above — and the definitive answer to the snapshot-revision caveat. A daily job (`src/paper/paper_trade.py`, launchd, attempts at 09:35/10:45/11:40 + a 12:05 missed-day check, Europe/Berlin) fetches the TSO forecasts and price history, builds the tier ladder (persist_d1, blend, rl_quad, blend_rl), solves the dispatch LP per tier, and **freezes forecast + schedule to disk before the 12:00 gate closure**. The next day it settles the frozen schedules against realized auction prices and appends to a ledger. Because the forecasts are frozen pre-auction, they are point-in-time *by construction* — from here on, capture ratios accumulate genuinely out of sample.
+`src/paper/paper_trade.py` can be run manually before the 12:00 gate closure. It fetches the available TSO forecasts and price history, builds the eligible tier ladder, solves the dispatch LP, and **freezes forecast + schedule to disk before gate closure**. The next manual run settles frozen schedules against realized auction prices and appends to a ledger. Price-history tiers remain available when public residual-load forecasts have not yet been published; forecast-dependent tiers are explicitly marked unavailable and are never back-filled.
 
 Guards, because paper trading is only worth doing honestly:
 - a bid is refused (and the day logged as missed, never back-filled) if the job fires after 12:00 — e.g. the machine was asleep;
@@ -146,11 +146,11 @@ An earlier version of this study reported an intraday-market tier built on a ser
 Each delivery day is optimized independently over a 24-hour window (matching real day-ahead operation and keeping the LPs small). Per hour *t*, with Δt = 1h so MW ≡ MWh:
 
 - Variables: charge `c_t ≥ 0`, discharge `d_t ≥ 0`, state of charge `s_t`.
-- Objective: `max Σ (price_t·d_t·η_dis − price_t·c_t) − λ·Σ(c_t + d_t)`
+- Objective: `max Σ (price_t·d_t − price_t·c_t) − λ·Σ(c_t + d_t)`
 - SoC dynamics: `s_t = s_{t-1} + c_t·η_ch − d_t/η_dis`
 - Bounds: `0 ≤ c_t,d_t ≤ P_max`, `0 ≤ s_t ≤ E_max`, fixed start/end SoC.
 
-Round-trip efficiency is split symmetrically: `η_ch = η_dis = sqrt(η_rt)`. Solved with **cvxpy** (CLARABEL). Looped over all 1,632 complete trading days.
+Round-trip efficiency is split symmetrically: `η_ch = η_dis = sqrt(η_rt)` and applied once through the SoC balance. Solved with **cvxpy**: continuous LPs on non-negative-price days and SCIPY/HiGHS mixed-integer charge/discharge exclusivity on negative-price days. Looped over all 1,731 complete trading days.
 
 **Tiers compared:**
 - `pf_da` — optimize against the realized DA curve (perfect foresight; the ceiling).
@@ -177,13 +177,13 @@ bess-arbitrage/
     forecast/residual_load.py # fundamental tiers: rolling-OLS on residual-load forecast
     forecast/gbm_shape.py     # walk-forward gradient-boosted model (price or shape target)
     paper/paper_trade.py      # live paper trading: freeze bids pre-auction, settle daily
-    optimize/lp_dispatch.py   # per-day cvxpy LP (BatteryParams, solve_day, DispatchResult)
+    optimize/lp_dispatch.py   # per-day cvxpy LP/MILP (BatteryParams, solve_day, DispatchResult)
     optimize/realistic.py     # executable tiers: persistence + rolling-OLS blend forecasts,
                               # schedule-then-settle
     backtest/revenue.py       # all-day loop, yearly summary, capture/gap findings table
     backtest/decompose.py     # forecast-value gap -> level cost vs shape cost decomposition
     backtest/gap_analysis.py  # where the gap lives: concentration, shape-change buckets
-    backtest/forecast_tiers.py# evaluate forecast tiers through the same LP harness
+    backtest/forecast_tiers.py# evaluate tiers through the same dispatch harness
     backtest/heatwave_study.py# June 2026 heatwave event study
     viz/plots.py              # Plotly charts (HTML+PNG) + structured KPI exports
   tests/                      # LP + executable-tier sanity checks (pytest)
@@ -200,7 +200,7 @@ bess-arbitrage/
 | `id_prices.parquet` | SMARD filters 4996/4997 | **Not used in the backtest** — actually Belgium / Norway-NO2 DA prices (see post-mortem); retained for `validate.py` |
 | `smard_forecasts.parquet` | SMARD filters 411/125/123/3791 | TSO **day-ahead forecasts** of load / PV / wind on-/offshore (-> residual load); the D-1-known fundamental features for the forecast tiers |
 
-Coverage 2022-01-01 → 2026-06-29, Europe/Berlin tz; only complete 24-hour days are kept (DST transition days dropped). Per workspace rules, parquet files are copied into `data/raw/`; no code is imported from da-id.
+Coverage 2022-01-01 → 2026-10-09, Europe/Berlin tz; only complete 24-hour days are kept (DST transition days dropped). Per workspace rules, parquet files are copied into `data/raw/`; no code is imported from da-id.
 
 ### SQL access layer
 
@@ -230,7 +230,7 @@ Forecast layer: `gap_analysis_daily.csv` + `gap_concentration_*.csv` + `gap_shap
 - **Hourly granularity vs. the 15-minute MTU.** Since 2025-10-01 the DE-LU day-ahead auction clears in 15-minute periods; this study uses the hourly series (the average of the four quarter prices). Averaging smooths intra-hour spread, so from Q4 2025 onward the perfect-foresight ceiling — and the revenue of any battery able to follow a 15-minute schedule — is **understated**. Capture ratios are less distorted because all tiers share the same smoothing, but the 2026 levels should be read as conservative.
 - **SMARD forecast series are latest-snapshot.** The fundamental tiers use SMARD's TSO day-ahead load/PV/wind forecasts, which SMARD serves without publication timestamps. A dedicated labeling check (`python -m src.data.validate_forecasts`) proves they are *not* mislabeled copies of the realized series — forecast-vs-realized errors show the classic D-1 profile (load ≈ 3.9% MAPE, wind onshore ≈ 13.5%, exact-match rate ≈ 0%) — but post-auction *revisions* of a genuine forecast cannot be excluded from SMARD alone; the fundamental-tier results should be read as an upper bound until rebuilt from point-in-time ENTSO-E data.
 - **Throughput cost is a stylized scalar.** True degradation is path-, depth- and temperature-dependent; λ is a single public-assumption proxy.
-- **No binary against simultaneous charge+discharge.** A plain LP (not MILP) permits both flows in the same hour — physically impossible, and at negative prices the pair burns energy for money. Quantified (`python -m src.backtest.lp_artifact_check`): the pair only turns profitable below −2λ/(1−η_dis) ≈ **−51 EUR/MWh**; across the 300 negative-price days in the sample the solver used overlapping flows in 152 hours with a net contribution of **≈ −7 EUR over 4.5 years** — solver degeneracy, not a revenue exploit. A real dispatch system would add the binaries or net out overlaps in post-processing; for this study the LP is the right tool.
+- **Mutually exclusive charge/discharge.** Negative-price days activate binary operating-mode constraints, preventing the continuous-LP artifact of charging and discharging simultaneously to dissipate energy. The regression audit covers 330 negative-price days and reports **0 overlap days, 0 overlap hours and €0 pair revenue**. Non-negative days retain the faster continuous LP because overlap is dominated by efficiency loss and throughput cost.
 - **No transaction costs / taxes / grid fees** beyond the throughput penalty.
 
 ## Setup
@@ -258,7 +258,7 @@ python3 -m venv .venv            # Python 3.9 compatible
 .venv/bin/python -m src.data.fetch_smard_actuals     # realized load/PV/wind (~950 requests)
 .venv/bin/python -m src.data.validate_forecasts      # forecast labeling forensics (networked)
 
-# live paper trading (runs daily via launchd, attempts at 09:35/10:45/11:40 + a 12:05 missed-day check, Europe/Berlin)
+# manual paper trading (run before 12:00 Europe/Berlin when desired)
 .venv/bin/python -m src.paper.paper_trade
 ```
 

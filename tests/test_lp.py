@@ -79,6 +79,19 @@ def test_efficiency_loss_reduces_revenue():
     assert r_lossy.revenue < r_lossless.revenue
 
 
+def test_round_trip_efficiency_is_applied_exactly_once():
+    # AC-side convention: buy 1/eta_ch MWh to fill a 1 MWh battery, then
+    # export eta_dis MWh. With eta_rt=.81, eta_ch=eta_dis=.9.
+    prices = np.array([10.0, 100.0])
+    p = BatteryParams(e_max_mwh=1.0, p_max_mw=2.0, eta_round_trip=0.81,
+                      throughput_cost_eur_mwh=0.0)
+    r = solve_day(prices, p)
+    expected = 100.0 * 0.9 - 10.0 / 0.9
+    assert r.revenue == pytest.approx(expected, abs=1e-3)
+    assert r.charge[0] == pytest.approx(1.0 / 0.9, abs=1e-3)
+    assert r.discharge[1] == pytest.approx(0.9, abs=1e-3)
+
+
 def test_settle_schedule_matches():
     # settle_schedule must reproduce solve_day's revenue
     prices = np.array([20.0, 30.0, 80.0])
@@ -88,29 +101,25 @@ def test_settle_schedule_matches():
     assert rev == pytest.approx(r.revenue, abs=1e-6)
 
 
-def test_simultaneous_charge_discharge_only_pays_below_break_even():
-    # The LP has no binary forbidding simultaneous charge+discharge; the
-    # pair burns energy and is paid only when prices are negative enough:
-    # price < -2*lambda/(1-eta_dis) (~ -51 EUR/MWh at default params).
+def test_negative_prices_never_cause_simultaneous_charge_discharge():
+    # An unconstrained LP would profit from a loss-making internal loop below
+    # this threshold. The production solver activates charge/discharge mode
+    # binaries on negative-price days and must remove that physical artifact.
     from src.backtest.lp_artifact_check import break_even_price
 
     p = BatteryParams(e_max_mwh=2.0, p_max_mw=1.0, eta_round_trip=0.85,
                       throughput_cost_eur_mwh=2.0)
     be = break_even_price(p)
-    assert be == pytest.approx(-51.3, abs=0.5)
+    assert be == pytest.approx(-24.7, abs=0.5)
 
-    # deeply negative block (below break-even): once the battery is full,
-    # burning energy via paired flows is profitable -> overlap expected
+    # Deeply negative block, below the unconstrained break-even threshold.
     deep = np.array([-200.0] * 6 + [50.0] * 18)
     r = solve_day(deep, p)
     both = (r.charge > 1e-4) & (r.discharge > 1e-4)
-    assert both.any()
+    assert not both.any()
 
-    # mildly negative block (above break-even): burning loses money ->
-    # any overlap the solver returns must contribute ~nothing
-    mild = np.array([-30.0] * 6 + [50.0] * 18)
+    # Mildly negative block must also remain mutually exclusive.
+    mild = np.array([-10.0] * 6 + [50.0] * 18)
     r = solve_day(mild, p)
-    pair = np.minimum(r.charge, r.discharge)
-    pair_rev = float(np.sum(mild * pair * (p.eta_dis - 1.0))
-                     - p.throughput_cost_eur_mwh * 2.0 * pair.sum())
-    assert pair_rev <= 1e-6
+    both = (r.charge > 1e-4) & (r.discharge > 1e-4)
+    assert not both.any()

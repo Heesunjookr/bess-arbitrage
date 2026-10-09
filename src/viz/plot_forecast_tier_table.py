@@ -29,11 +29,11 @@ def _outdir() -> Path:
 def plot_forecast_tier_table(out_path: Path) -> None:
     columns = ["Tier", "Information set", "Capture", "Gap recovered"]
     rows = [
-        ["persist_d1", "D-1 price curve", "77.6%", "baseline"],
-        ["blend", "D-1 + D-7 curves, rolling OLS", "81.9%", "19%"],
-        ["gbm", "everything below + calendar, gradient boosting", "86.8%", "41%"],
-        ["rl_quad", "residual-load forecast only (RL + RL²)", "89.8%", "55%"],
-        ["blend_rl", "D-1 + D-7 + RL + RL², rolling OLS", "92.3%", "66%"],
+        ["persist_d1", "D-1 price curve", "82.3%", "baseline"],
+        ["blend", "D-1 + D-7 curves, rolling OLS", "86.4%", "23%"],
+        ["gbm", "everything below + calendar, gradient boosting", "88.3%", "34%"],
+        ["rl_quad", "residual-load forecast only (RL + RL²)", "92.5%", "58%"],
+        ["blend_rl", "D-1 + D-7 + RL + RL², rolling OLS", "94.5%", "69%"],
     ]
 
     fig, ax = plt.subplots(figsize=(12, 3.55), dpi=200)
