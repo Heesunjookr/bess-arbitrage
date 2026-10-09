@@ -1,8 +1,12 @@
 {
   "data_status": "validated",
-  "model_status": "rejected",
+  "model_status": "research_only",
+  "version": "v2_15min_causal",
   "source": "Netztransparenz ID-AEP",
-  "resolution": "15-minute source, hourly decision model",
+  "price_role": "settlement_proxy",
+  "resolution": "15-minute",
+  "panel_rows": 167116,
+  "panel_end": "2026-10-08",
   "train_period": "2022-01-01/2024-12-31",
   "holdout_period": "2025-01-01/2026-06-29",
   "holdout_days": 544,
@@ -16,4 +20,19 @@
   "active_days": 153,
   "adjustment_cost_eur_per_mwh": 1.05,
   "recommendation": null
+  ,
+  "v2_holdout": {
+    "start": "2025-01-01",
+    "end": "2026-09-29",
+    "n_intervals": 60947,
+    "ml_r2": 0.1033,
+    "ml_mae_eur_mwh": 29.729,
+    "direction_accuracy": 0.6802,
+    "simple_baseline_r2": -0.0096
+  },
+  "production_ready": false,
+  "blocking_inputs": [
+    "historical EPEX ID1/ID3 or executable order-book prices",
+    "historical intraday renewable forecast vintages"
+  ]
 }

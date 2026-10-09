@@ -24,11 +24,13 @@ def test_pages_build_contains_interactive_assets():
     assert "Day-Ahead Dispatch" in page
     assert "Intraday Re-optimisation" in page
     assert "Investment Case" in page
-    assert "MODEL RESULT: DO NOT RE-OPTIMISE" in page
+    assert "NO LIVE TRADE RECOMMENDATION" in page
     research = json.loads((target.parent / "research.json").read_text())
     assert research["intraday"]["data_status"] == "validated"
-    assert research["intraday"]["model_status"] == "rejected"
+    assert research["intraday"]["model_status"] == "research_only"
     assert research["intraday"]["incremental_value_eur"] < 0
+    assert research["intraday"]["v2_holdout"]["ml_r2"] > 0
+    assert research["intraday"]["production_ready"] is False
     assert research["intraday"]["recommendation"] is None
 
 
