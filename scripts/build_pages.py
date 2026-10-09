@@ -40,6 +40,9 @@ def build_research_bundle() -> dict:
         (ROOT / "data/processed/kpi_summary.json").read_text(encoding="utf-8")
     )
     mean = summary["full_sample_mean"]
+    intraday = json.loads(
+        (ROOT / "data/public/intraday_research.json").read_text(encoding="utf-8")
+    )
     return {
         "sample": summary["sample"],
         "revenue_eur_per_mw_yr": {
@@ -52,11 +55,7 @@ def build_research_bundle() -> dict:
             "d1": "D-1 persistence",
             "ceiling": "Perfect-foresight ceiling",
         },
-        "intraday": {
-            "status": "blocked",
-            "reason": "No validated German intraday target or OOS signal is available.",
-            "recommendation": None,
-        },
+        "intraday": intraday,
     }
 
 
