@@ -21,10 +21,10 @@ def test_pages_build_contains_interactive_assets():
     payload = json.loads((target.parent / "prices.json").read_text())
     assert payload["days"]
     page = target.read_text()
-    assert "Day-Ahead Dispatch" in page
-    assert "Intraday Re-optimisation" in page
-    assert "Investment Case" in page
-    assert "ML OUTPERFORMS THE SIMPLE BASELINE" in page
+    assert '>Day-Ahead</button>' in page
+    assert '>Intraday</button>' in page
+    assert '>Investment</button>' in page
+    assert "ML exceeds the time-of-day baseline" in page
     assert "NO LIVE TRADE RECOMMENDATION" not in page
     research = json.loads((target.parent / "research.json").read_text())
     assert research["intraday"]["data_status"] == "validated"

@@ -2,38 +2,76 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Explore day-ahead BESS dispatch, intraday re-optimisation readiness and a storage investment case for Germany.">
-  <title>German BESS Decision Lab · Heesun Joo</title>
+  <meta name="description" content="German power-market research tools for BESS dispatch, intraday signals and investment screening.">
+  <title>German Power Market Lab · Heesun Joo</title>
   <link rel="stylesheet" href="styles.css?build=__BUILD_ID__"><style>[hidden]{display:none!important}</style>
 </head>
 <body>
-<header><a class="brand" href="#">HEESUN JOO <span>/ BESS DECISION LAB</span></a><nav><a href="#workspace">Lab</a><a href="#method">Method</a><a href="https://github.com/Heesunjookr/bess-arbitrage">Source</a></nav></header>
+<header>
+  <div><a class="brand" href="#">German Power Market Lab</a><span class="owner">Heesun Joo</span></div>
+  <div class="header-meta"><span>DE-LU</span><span>Data through 08 Oct 2026</span><a href="https://github.com/Heesunjookr/bess-arbitrage">Source ↗</a></div>
+</header>
 <main>
-<section class="hero"><p class="kicker">GERMANY / LUXEMBOURG · STORAGE DECISIONS</p><h1>From market signal<br>to asset value.</h1><p class="lede">Build a day-ahead battery schedule, see whether validated intraday information supports a re-trade, and translate operating revenue into an investment case.</p><a class="primary" href="#workspace">Open the decision lab ↓</a></section>
 <section id="workspace" class="workspace">
-  <div class="tabs" role="tablist" aria-label="Decision lab modules">
-    <button class="tab active" role="tab" aria-selected="true" data-tab="dayahead"><span>01</span> Day-Ahead Dispatch</button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="intraday"><span>02</span> Intraday Re-optimisation</button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="investment"><span>03</span> Investment Case</button>
+  <div class="tabs" role="tablist" aria-label="Research modules">
+    <button class="tab active" role="tab" aria-selected="true" data-tab="dayahead">Day-Ahead</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="intraday">Intraday</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="investment">Investment</button>
   </div>
+
   <section id="panel-dayahead" class="tab-panel lab" role="tabpanel">
-    <aside class="controls"><div class="step">DEFINE THE ASSET</div><label>Delivery day<select id="day"></select></label><div class="preset-row"><button class="preset active" data-duration="2">2-hour</button><button class="preset" data-duration="4">4-hour</button></div><label>Power <output id="powerOut">1.0 MW</output><input id="power" type="range" min="0.5" max="10" step="0.5" value="1"></label><label>Duration <output id="durationOut">2 h</output><input id="duration" type="range" min="1" max="8" step="1" value="2"></label><label>Round-trip efficiency <output id="efficiencyOut">85%</output><input id="efficiency" type="range" min="70" max="95" step="1" value="85"></label><label>Throughput cost <output id="costOut">€2/MWh</output><input id="cost" type="range" min="0" max="20" step="1" value="2"></label><button id="run" class="run">Run dispatch <span>→</span></button><p class="control-note">Start and end SoC are fixed at zero. Nothing is sent to a server.</p></aside>
-    <div class="results" aria-live="polite"><div class="result-head"><div><div class="step">INSPECT THE RESULT</div><h2 id="resultTitle">Choose a scenario and run it.</h2></div><span>BROWSER SOLVER</span></div><div id="empty" class="empty"><div class="battery">▰</div><p>Your price curves and dispatch schedule will appear here.</p></div><div id="output" hidden><div class="metrics"><article><small>Perfect-foresight ceiling</small><strong id="perfectMetric">—</strong><span>research benchmark</span></article><article><small>D-1 settled value</small><strong id="d1Metric">—</strong><span>executable schedule</span></article><article><small>Value captured</small><strong id="captureMetric">—</strong><span>of the daily ceiling</span></article><article><small>Forecast cost</small><strong id="gapMetric">—</strong><span>missed value</span></article></div><div class="chart-card"><div class="chart-title"><h3>Price and D-1 dispatch</h3><div class="legend"><i class="actual"></i>Actual price <i class="forecast"></i>D-1 curve <i class="dispatch"></i>Dispatch</div></div><svg id="dispatchChart" viewBox="0 0 900 390" role="img"></svg></div><div class="insight"><span>WHAT HAPPENED</span><p id="insightText"></p></div><div class="actions"><button id="download">Download schedule (.csv)</button><button id="share">Copy scenario link</button><a id="challenge" target="_blank">Suggest a scenario ↗</a></div></div></div>
+    <aside class="controls">
+      <h2>Dispatch inputs</h2>
+      <label>Delivery date<select id="day"></select></label>
+      <div class="preset-row"><button class="preset active" data-duration="2">2 h</button><button class="preset" data-duration="4">4 h</button></div>
+      <label>Power <output id="powerOut">1.0 MW</output><input id="power" type="range" min="0.5" max="10" step="0.5" value="1"></label>
+      <label>Duration <output id="durationOut">2 h</output><input id="duration" type="range" min="1" max="8" step="1" value="2"></label>
+      <label>Round-trip efficiency <output id="efficiencyOut">85%</output><input id="efficiency" type="range" min="70" max="95" step="1" value="85"></label>
+      <label>Throughput cost <output id="costOut">€2/MWh</output><input id="cost" type="range" min="0" max="20" step="1" value="2"></label>
+      <button id="run" class="run">Run dispatch</button>
+      <p class="note">Start and end SoC fixed at zero. Calculation runs locally.</p>
+    </aside>
+    <div class="results" aria-live="polite">
+      <div class="panel-head"><div><small>DAY-AHEAD DISPATCH</small><h1 id="resultTitle">Choose a scenario and run it.</h1></div><span>Historical simulation</span></div>
+      <div id="empty" class="empty"><p>Price and dispatch results will appear here.</p></div>
+      <div id="output" hidden>
+        <div class="metrics"><article><small>PF ceiling</small><strong id="perfectMetric">—</strong><span>benchmark</span></article><article><small>D-1 value</small><strong id="d1Metric">—</strong><span>settled</span></article><article><small>Capture</small><strong id="captureMetric">—</strong><span>of ceiling</span></article><article><small>Forecast cost</small><strong id="gapMetric">—</strong><span>value gap</span></article></div>
+        <div class="chart-card"><div class="chart-title"><h3>Price and D-1 dispatch</h3><div class="legend"><i class="actual"></i>Actual <i class="forecast"></i>D-1 <i class="dispatch"></i>Dispatch</div></div><svg id="dispatchChart" viewBox="0 0 900 390" role="img"></svg></div>
+        <div class="insight"><b>Observation</b><p id="insightText"></p></div>
+        <div class="actions"><button id="download">Download CSV</button><button id="share">Copy link</button><a id="challenge" target="_blank">Open issue ↗</a></div>
+      </div>
+    </div>
   </section>
+
   <section id="panel-intraday" class="tab-panel module" role="tabpanel" hidden>
-    <div class="module-head"><div><p class="step">15-MINUTE SIGNAL RESEARCH</p><h2>Can public intraday information improve the DA position?</h2></div><span class="status">OUT-OF-SAMPLE EVALUATION</span></div>
-    <div class="decision-grid"><article class="decision-card"><small>Selected DA scenario</small><strong id="idScenario">Run a DA scenario first</strong><p id="idBaseline">The frozen schedule becomes the baseline position for future re-optimisation.</p></article><article class="decision-card"><small>Model comparison</small><strong>ML OUTPERFORMS THE SIMPLE BASELINE</strong><p>The causal 15-minute model improves holdout R² from −0.010 to 0.103 and identifies the spread direction in 68.0% of intervals.</p></article></div>
-    <div class="metrics research-metrics"><article><small>Native resolution</small><strong>15 min</strong><span>167,116 MTUs</span></article><article><small>Holdout R²</small><strong>0.103</strong><span>vs −0.010 simple baseline</span></article><article><small>Direction accuracy</small><strong>68.0%</strong><span>2025–2026 holdout</span></article><article><small>Data coverage</small><strong>4.8 yr</strong><span>2022–2026</span></article></div>
-    <div class="pipeline"><article><span>1</span><b>Freeze DA position</b><p>Pass the selected battery constraints and hourly schedule from the first tab.</p></article><i>→</i><article><span>2</span><b>Validate new information</b><p>Require genuine 15-minute ID-AEP prices and an out-of-sample signal.</p></article><i>→</i><article><span>3</span><b>Re-optimise remaining horizon</b><p>Respect current SoC, locked trades, efficiency, costs and power limits.</p></article><i>→</i><article><span>4</span><b>Measure incremental value</b><p>Compare net value after costs against keeping the DA schedule.</p></article></div>
-    <div class="audit-note"><div><p class="step">RESEARCH SCOPE</p><h3>A causal public-data signal study.</h3><p>The panel preserves the 15-minute MTU, separates decision and delivery time, and lags realised information behind the decision timestamp. ID-AEP is used as a public settlement-price proxy; executable order-book validation requires historical EPEX data.</p></div><a href="https://github.com/Heesunjookr/da-id-arbitrage" target="_blank">Inspect the v2 source ↗</a></div>
+    <div class="panel-head"><div><small>15-MINUTE SIGNAL STUDY</small><h1>Intraday spread model</h1></div><span>Out-of-sample: 2025–2026</span></div>
+    <div class="summary-row"><div><small>Linked DA scenario</small><strong id="idScenario">Run a DA scenario first</strong><p id="idBaseline">The DA schedule provides the baseline position.</p></div><div><small>Result</small><strong>ML exceeds the time-of-day baseline</strong><p>Decision-time features only; realised inputs are lagged.</p></div></div>
+    <div class="metrics research-metrics"><article><small>Resolution</small><strong>15 min</strong><span>167,116 MTUs</span></article><article><small>Holdout R²</small><strong>0.103</strong><span>baseline −0.010</span></article><article><small>Direction</small><strong>68.0%</strong><span>60,947 intervals</span></article><article><small>Coverage</small><strong>4.8 yr</strong><span>2022–2026</span></article></div>
+    <div class="process-table">
+      <div><span>01</span><b>DA position</b><p>Freeze cleared schedule and battery constraints.</p></div>
+      <div><span>02</span><b>Signal</b><p>Estimate ID-AEP spread at 15-minute resolution.</p></div>
+      <div><span>03</span><b>Re-optimise</b><p>Apply SoC, power, cost and gate-closure constraints.</p></div>
+      <div><span>04</span><b>Compare</b><p>Measure incremental value against unchanged DA.</p></div>
+    </div>
+    <div class="scope"><b>Research scope</b><p>ID-AEP is used as a public settlement-price proxy. Executable order-book validation requires historical EPEX data.</p><a href="https://github.com/Heesunjookr/da-id-arbitrage" target="_blank">Method and code ↗</a></div>
   </section>
+
   <section id="panel-investment" class="tab-panel module" role="tabpanel" hidden>
-    <div class="module-head"><div><p class="step">UNLEVERED SCREENING CASE</p><h2>Does the validated DA revenue support the asset economics?</h2></div><span class="status">DA REVENUE ONLY</span></div>
-    <div class="investment-layout"><aside class="case-inputs"><label>Revenue basis<select id="revenueBasis"><option value="blend">Forecast-based blend</option><option value="d1">D-1 persistence</option><option value="ceiling">Perfect-foresight ceiling</option></select></label><label>CAPEX <output id="capexOut">€500/kWh</output><input id="capex" type="range" min="200" max="1000" step="25" value="500"></label><label>Fixed OPEX <output id="opexOut">€15k/MW/yr</output><input id="opex" type="range" min="0" max="50" step="1" value="15"></label><label>Annual degradation <output id="degradationOut">2.0%</output><input id="degradation" type="range" min="0" max="5" step="0.25" value="2"></label><label>Downside stress <output id="stressOut">0%</output><input id="stress" type="range" min="0" max="60" step="5" value="0"></label><label>Project life <output id="lifeOut">15 yr</output><input id="life" type="range" min="5" max="25" step="1" value="15"></label></aside><div class="case-results"><div class="metrics case-metrics"><article><small>Initial CAPEX</small><strong id="caseCapex">—</strong><span>power × duration × €/kWh</span></article><article><small>Year-1 net cash flow</small><strong id="caseCash">—</strong><span>DA revenue less fixed OPEX</span></article><article><small>Simple payback</small><strong id="casePayback">—</strong><span>undiscounted</span></article><article><small>Project IRR</small><strong id="caseIrr">—</strong><span>unlevered, pre-tax</span></article></div><div class="chart-card"><div class="chart-title"><h3>Annual operating cash flow</h3><span id="caseBasisNote"></span></div><svg id="cashChart" viewBox="0 0 900 330" role="img"></svg></div><p class="case-warning">Screening model only. Revenue is the historical 1 MW / 2 h benchmark scaled by power, not a duration-specific forecast. It excludes intraday, ancillary services, tax, financing, augmentation, availability, grid fees and merchant price evolution.</p></div></div>
+    <div class="panel-head"><div><small>UNLEVERED SCREENING</small><h1>Investment case</h1></div><span>DA revenue only</span></div>
+    <div class="investment-layout">
+      <aside class="case-inputs">
+        <label>Revenue basis<select id="revenueBasis"><option value="blend">Forecast-based blend</option><option value="d1">D-1 persistence</option><option value="ceiling">Perfect-foresight ceiling</option></select></label>
+        <label>CAPEX <output id="capexOut">€500/kWh</output><input id="capex" type="range" min="200" max="1000" step="25" value="500"></label>
+        <label>Fixed OPEX <output id="opexOut">€15k/MW/yr</output><input id="opex" type="range" min="0" max="50" step="1" value="15"></label>
+        <label>Annual degradation <output id="degradationOut">2.0%</output><input id="degradation" type="range" min="0" max="5" step="0.25" value="2"></label>
+        <label>Downside stress <output id="stressOut">0%</output><input id="stress" type="range" min="0" max="60" step="5" value="0"></label>
+        <label>Project life <output id="lifeOut">15 yr</output><input id="life" type="range" min="5" max="25" step="1" value="15"></label>
+      </aside>
+      <div class="case-results"><div class="metrics"><article><small>Initial CAPEX</small><strong id="caseCapex">—</strong><span>installed cost</span></article><article><small>Year-1 cash flow</small><strong id="caseCash">—</strong><span>after fixed OPEX</span></article><article><small>Payback</small><strong id="casePayback">—</strong><span>undiscounted</span></article><article><small>Project IRR</small><strong id="caseIrr">—</strong><span>unlevered, pre-tax</span></article></div><div class="chart-card"><div class="chart-title"><h3>Annual operating cash flow</h3><span id="caseBasisNote"></span></div><svg id="cashChart" viewBox="0 0 900 330" role="img"></svg></div><p class="note">Historical 1 MW / 2 h benchmark scaled by power. Excludes intraday, ancillary services, tax, financing, grid fees and augmentation.</p></div>
+    </div>
   </section>
 </section>
-<section id="method" class="method"><p class="kicker">DECISION DISCIPLINE</p><h2>Three layers, three different claims.</h2><div class="method-grid"><article><b>Dispatch</b><p>The DA tab computes a physical schedule and settles it against historical DE-LU prices.</p></article><article><b>Re-optimisation</b><p>The intraday layer remains gated until genuine data and out-of-sample evidence exist.</p></article><article><b>Investment</b><p>The commercial layer converts validated DA revenue into transparent, editable assumptions.</p></article></div><p class="disclaimer">Simulated historical results, not realised trading revenue or investment advice. Source data: ENTSO-E Transparency Platform.</p></section>
 </main>
-<footer><span>Built and researched by Heesun Joo</span><a href="https://github.com/Heesunjookr/bess-arbitrage">Code, tests and assumptions ↗</a></footer>
+<footer><span>Historical research · not investment advice</span><span>Python · ENTSO-E · Netztransparenz</span></footer>
 <script src="app.js?build=__BUILD_ID__"></script>
 </body></html>
