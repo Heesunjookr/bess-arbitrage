@@ -36,7 +36,7 @@ function run(){
   lastRun={day,data,p,perfect,d1,perfectValue,d1Value,capture};$('empty').hidden=true;$('output').hidden=false;$('resultTitle').textContent=`${p.power} MW / ${p.duration} h battery · ${day}`;
   $('perfectMetric').textContent=money(perfectValue);$('d1Metric').textContent=money(d1Value);$('captureMetric').textContent=capture===null?'n/a':`${(capture*100).toFixed(1)}%`;$('gapMetric').textContent=money(perfectValue-d1Value);
   const spread=Math.max(...data.realised)-Math.min(...data.realised),peak=data.realised.indexOf(Math.max(...data.realised));$('insightText').textContent=`The realised daily spread was €${spread.toFixed(0)}/MWh and the highest price arrived at ${String(peak).padStart(2,'0')}:00. The frozen D-1 schedule ${capture>=.8?'retained most of':'missed a material share of'} the day's available arbitrage value.`;
-  renderChart(data.realised,data.d1,d1);updateIntraday();renderInvestment();updateUrl(day,p);$('challenge').href=`https://github.com/Heesunjookr/bess-arbitrage/issues/new?title=${encodeURIComponent('Scenario request: '+day)}&body=${encodeURIComponent(`Please investigate this public lab scenario:\n\n- Delivery day: ${day}\n- Battery: ${p.power} MW / ${p.duration} h\n- Efficiency: ${Math.round(p.efficiency*100)}%\n- Throughput cost: €${p.cost}/MWh\n- D-1 capture: ${(capture*100).toFixed(1)}%`)}`;
+  renderChart(data.realised,data.d1,d1);updateIntraday();renderInvestment();updateUrl(day,p);
   $('run').disabled=false;$('run').innerHTML='Run dispatch <span>→</span>';
 }
 function switchTab(name){
@@ -75,7 +75,7 @@ function bind(){
   document.querySelectorAll('.preset').forEach(b=>b.onclick=()=>{$('duration').value=b.dataset.duration;$('duration').dispatchEvent(new Event('input'));document.querySelectorAll('.preset').forEach(x=>x.classList.toggle('active',x===b));});
   document.querySelectorAll('.tab').forEach(button=>button.onclick=()=>switchTab(button.dataset.tab));
   [['capex','capexOut',v=>`€${v}/kWh`],['opex','opexOut',v=>`€${v}k/MW/yr`],['degradation','degradationOut',v=>`${(+v).toFixed(1)}%`],['stress','stressOut',v=>`${v}%`],['life','lifeOut',v=>`${v} yr`]].forEach(([id,out,fmt])=>$(id).addEventListener('input',()=>{$(out).textContent=fmt($(id).value);renderInvestment();}));
-  $('revenueBasis').onchange=renderInvestment;$('run').onclick=run;$('day').onchange=run;$('download').onclick=download;$('share').onclick=async()=>{await navigator.clipboard.writeText(location.href);$('share').textContent='Link copied';setTimeout(()=>$('share').textContent='Copy scenario link',1600);};
+  $('revenueBasis').onchange=renderInvestment;$('run').onclick=run;$('day').onchange=run;$('download').onclick=download;
 }
 async function init(){[market,research]=await Promise.all([fetch('prices.json').then(r=>r.json()),fetch('research.json').then(r=>r.json())]);const days=Object.keys(market.days).reverse();$('day').innerHTML=days.map(d=>`<option>${d}</option>`).join('');bind();const q=new URLSearchParams(location.search);['power','duration','efficiency','cost'].forEach(id=>{if(q.has(id)){$(id).value=q.get(id);$(id).dispatchEvent(new Event('input'));}});if(q.has('day')&&market.days[q.get('day')])$('day').value=q.get('day');run();}
 if(typeof module!=='undefined') module.exports={optimise,settle};
