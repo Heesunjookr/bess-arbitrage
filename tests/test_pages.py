@@ -24,7 +24,7 @@ def test_pages_build_contains_interactive_assets():
     page = target.read_text()
     assert '>Day-Ahead</button>' in page
     assert '>Intraday</button>' in page
-    assert '>Investment</button>' in page
+    assert '>Investment</button>' not in page
     assert "ML exceeds the time-of-day baseline" in page
     assert "NO LIVE TRADE RECOMMENDATION" not in page
     research = json.loads((target.parent / "research.json").read_text())

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="German power-market research tools for BESS dispatch, intraday signals and investment screening.">
+  <meta name="description" content="German power-market research tools for BESS dispatch and intraday signals.">
   <title>German Power Market Lab · Heesun Joo</title>
   <link rel="stylesheet" href="styles.css?build=__BUILD_ID__"><link rel="stylesheet" href="palette.css?build=__BUILD_ID__"><style>[hidden]{display:none!important}</style>
 </head>
@@ -16,7 +16,6 @@
   <div class="tabs" role="tablist" aria-label="Research modules">
     <button class="tab active" role="tab" aria-selected="true" data-tab="dayahead">Day-Ahead</button>
     <button class="tab" role="tab" aria-selected="false" data-tab="intraday">Intraday</button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="investment">Investment</button>
   </div>
 
   <section id="panel-dayahead" class="tab-panel lab" role="tabpanel">
@@ -56,22 +55,8 @@
     <div class="scope"><b>Research scope</b><p>ID-AEP is used as a public settlement-price proxy. Executable order-book validation requires historical EPEX data.</p><a href="https://github.com/Heesunjookr/da-id-arbitrage" target="_blank">Method and code ↗</a></div>
   </section>
 
-  <section id="panel-investment" class="tab-panel module" role="tabpanel" hidden>
-    <div class="panel-head"><div><small>UNLEVERED SCREENING</small><h1>Investment case</h1></div><span>DA revenue only</span></div>
-    <div class="investment-layout">
-      <aside class="case-inputs">
-        <label>Revenue basis<select id="revenueBasis"><option value="blend">Forecast-based blend</option><option value="d1">D-1 persistence</option><option value="ceiling">Perfect-foresight ceiling</option></select></label>
-        <label>CAPEX <output id="capexOut">€500/kWh</output><input id="capex" type="range" min="200" max="1000" step="25" value="500"></label>
-        <label>Fixed OPEX <output id="opexOut">€15k/MW/yr</output><input id="opex" type="range" min="0" max="50" step="1" value="15"></label>
-        <label>Annual degradation <output id="degradationOut">2.0%</output><input id="degradation" type="range" min="0" max="5" step="0.25" value="2"></label>
-        <label>Downside stress <output id="stressOut">0%</output><input id="stress" type="range" min="0" max="60" step="5" value="0"></label>
-        <label>Project life <output id="lifeOut">15 yr</output><input id="life" type="range" min="5" max="25" step="1" value="15"></label>
-      </aside>
-      <div class="case-results"><div class="metrics"><article><small>Initial CAPEX</small><strong id="caseCapex">—</strong><span>installed cost</span></article><article><small>Year-1 cash flow</small><strong id="caseCash">—</strong><span>after fixed OPEX</span></article><article><small>Payback</small><strong id="casePayback">—</strong><span>undiscounted</span></article><article><small>Project IRR</small><strong id="caseIrr">—</strong><span>unlevered, pre-tax</span></article></div><div class="chart-card"><div class="chart-title"><h3>Annual operating cash flow</h3><span id="caseBasisNote"></span></div><svg id="cashChart" viewBox="0 0 900 330" role="img"></svg></div><p class="note">Historical 1 MW / 2 h benchmark scaled by power. Excludes intraday, ancillary services, tax, financing, grid fees and augmentation.</p></div>
-    </div>
-  </section>
 </section>
 </main>
-<footer><span>Historical research · not investment advice</span><span>Python · ENTSO-E · Netztransparenz</span></footer>
+<footer><span>Historical market research</span><span>Python · ENTSO-E · Netztransparenz</span></footer>
 <script src="app.js?build=__BUILD_ID__"></script>
 </body></html>
