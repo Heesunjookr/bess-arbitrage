@@ -26,9 +26,9 @@ function path(values,x,y,w,h,min,max){return values.map((v,i)=>`${i?'L':'M'} ${x
 function renderChart(actual,forecast,schedule){
   const svg=$('dispatchChart'),x=54,y=25,w=805,h=285,prices=[...actual,...forecast],min=Math.min(...prices),max=Math.max(...prices),maxP=Math.max(...schedule.map(r=>Math.abs(r.discharge-r.charge)),1);
   const grid=[0,.25,.5,.75,1].map(q=>`<line x1="${x}" y1="${y+h*q}" x2="${x+w}" y2="${y+h*q}" stroke="#e3e5df"/><text x="${x-8}" y="${y+h*q+4}" text-anchor="end" font-size="10" fill="#68736c">${Math.round(max-(max-min)*q)}</text>`).join('');
-  const bars=schedule.map((r,i)=>{const net=r.discharge-r.charge,bh=Math.abs(net)/maxP*70,bx=x+i*w/24+4,bw=w/24-7,base=y+h;return `<rect x="${bx}" y="${net>=0?base-bh:base}" width="${bw}" height="${bh}" fill="${net>=0?'#087853':'#d8a249'}" opacity=".72"/>`;}).join('');
+  const bars=schedule.map((r,i)=>{const net=r.discharge-r.charge,bh=Math.abs(net)/maxP*70,bx=x+i*w/24+4,bw=w/24-7,base=y+h;return `<rect x="${bx}" y="${net>=0?base-bh:base}" width="${bw}" height="${bh}" fill="${net>=0?'#1769aa':'#8fb3cf'}" opacity=".82"/>`;}).join('');
   const hours=[0,6,12,18,23].map(i=>`<text x="${x+i*w/23}" y="${y+h+92}" text-anchor="middle" font-size="10" fill="#68736c">${String(i).padStart(2,'0')}:00</text>`).join('');
-  svg.innerHTML=`${grid}${bars}<line x1="${x}" y1="${y+h}" x2="${x+w}" y2="${y+h}" stroke="#9ba39e"/><path d="${path(forecast,x,y,w,h,min,max)}" fill="none" stroke="#9ba39e" stroke-width="2" stroke-dasharray="5 5"/><path d="${path(actual,x,y,w,h,min,max)}" fill="none" stroke="#101713" stroke-width="3"/>${hours}<text x="12" y="18" font-size="10" fill="#68736c">€/MWh</text><text x="${x}" y="${y+h+65}" font-size="10" fill="#087853">Bars: D-1 net dispatch (+ discharge / − charge)</text>`;
+  svg.innerHTML=`${grid}${bars}<line x1="${x}" y1="${y+h}" x2="${x+w}" y2="${y+h}" stroke="#aeb6bd"/><path d="${path(forecast,x,y,w,h,min,max)}" fill="none" stroke="#9aa5ad" stroke-width="2" stroke-dasharray="5 5"/><path d="${path(actual,x,y,w,h,min,max)}" fill="none" stroke="#182028" stroke-width="3"/>${hours}<text x="12" y="18" font-size="10" fill="#66717c">€/MWh</text><text x="${x}" y="${y+h+65}" font-size="10" fill="#1769aa">Bars: D-1 net dispatch (+ discharge / − charge)</text>`;
 }
 function run(){
   $('run').disabled=true;$('run').innerHTML='Calculating… <span>·</span>';
@@ -58,7 +58,7 @@ function irr(cashflows){
 }
 function renderCashChart(values){
   const svg=$('cashChart'),x=58,y=25,w=805,h=240,max=Math.max(...values,1),bw=w/values.length*.62;
-  const bars=values.map((v,i)=>{const bh=Math.max(0,v/max*h),bx=x+(i+.19)*w/values.length;return `<rect x="${bx}" y="${y+h-bh}" width="${bw}" height="${bh}" fill="#087853" opacity="${.9-i*.015}"/><text x="${bx+bw/2}" y="${y+h+20}" text-anchor="middle" font-size="10" fill="#68736c">${i+1}</text>`;}).join('');
+  const bars=values.map((v,i)=>{const bh=Math.max(0,v/max*h),bx=x+(i+.19)*w/values.length;return `<rect x="${bx}" y="${y+h-bh}" width="${bw}" height="${bh}" fill="#1769aa" opacity="${.9-i*.015}"/><text x="${bx+bw/2}" y="${y+h+20}" text-anchor="middle" font-size="10" fill="#66717c">${i+1}</text>`;}).join('');
   svg.innerHTML=`<line x1="${x}" y1="${y+h}" x2="${x+w}" y2="${y+h}" stroke="#9ba39e"/>${bars}<text x="12" y="18" font-size="10" fill="#68736c">EUR/yr</text><text x="${x+w/2}" y="${y+h+48}" text-anchor="middle" font-size="10" fill="#68736c">Project year</text>`;
 }
 function renderInvestment(){
