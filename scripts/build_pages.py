@@ -34,6 +34,32 @@ def build_price_bundle() -> dict:
                      for previous, day in eligible}}
 
 
+def build_research_bundle() -> dict:
+    """Expose only reviewed study outputs used by the commercial screening tab."""
+    summary = json.loads(
+        (ROOT / "data/processed/kpi_summary.json").read_text(encoding="utf-8")
+    )
+    mean = summary["full_sample_mean"]
+    return {
+        "sample": summary["sample"],
+        "revenue_eur_per_mw_yr": {
+            "blend": mean["blend_eur_per_mw_yr"],
+            "d1": mean["persist_d1_eur_per_mw_yr"],
+            "ceiling": mean["pf_da_eur_per_mw_yr"],
+        },
+        "labels": {
+            "blend": "Forecast-based blend",
+            "d1": "D-1 persistence",
+            "ceiling": "Perfect-foresight ceiling",
+        },
+        "intraday": {
+            "status": "blocked",
+            "reason": "No validated German intraday target or OOS signal is available.",
+            "recommendation": None,
+        },
+    }
+
+
 def build() -> Path:
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -46,6 +72,9 @@ def build() -> Path:
     )
     (OUT / "prices.json").write_text(
         json.dumps(build_price_bundle(), separators=(",", ":")), encoding="utf-8"
+    )
+    (OUT / "research.json").write_text(
+        json.dumps(build_research_bundle(), separators=(",", ":")), encoding="utf-8"
     )
     return index
 

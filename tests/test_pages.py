@@ -1,6 +1,6 @@
 import json
 
-from scripts.build_pages import build, build_price_bundle
+from scripts.build_pages import build, build_price_bundle, build_research_bundle
 
 
 def test_price_bundle_only_contains_complete_day_pairs():
@@ -20,3 +20,18 @@ def test_pages_build_contains_interactive_assets():
     assert (target.parent / "app.js").is_file()
     payload = json.loads((target.parent / "prices.json").read_text())
     assert payload["days"]
+    page = target.read_text()
+    assert "Day-Ahead Dispatch" in page
+    assert "Intraday Re-optimisation" in page
+    assert "Investment Case" in page
+    assert "NO RECOMMENDATION" in page
+    research = json.loads((target.parent / "research.json").read_text())
+    assert research["intraday"]["status"] == "blocked"
+    assert research["intraday"]["recommendation"] is None
+
+
+def test_research_bundle_uses_reviewed_da_outputs_only():
+    bundle = build_research_bundle()
+    assert bundle["sample"]["n_days_total"] > 1_000
+    assert set(bundle["revenue_eur_per_mw_yr"]) == {"blend", "d1", "ceiling"}
+    assert all(value > 0 for value in bundle["revenue_eur_per_mw_yr"].values())
