@@ -24,7 +24,8 @@ def test_pages_build_contains_interactive_assets():
     assert "Day-Ahead Dispatch" in page
     assert "Intraday Re-optimisation" in page
     assert "Investment Case" in page
-    assert "NO LIVE TRADE RECOMMENDATION" in page
+    assert "ML OUTPERFORMS THE SIMPLE BASELINE" in page
+    assert "NO LIVE TRADE RECOMMENDATION" not in page
     research = json.loads((target.parent / "research.json").read_text())
     assert research["intraday"]["data_status"] == "validated"
     assert research["intraday"]["model_status"] == "research_only"
