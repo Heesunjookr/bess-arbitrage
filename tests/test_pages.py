@@ -18,6 +18,7 @@ def test_pages_build_contains_interactive_assets():
     assert "__BUILD_ID__" not in target.read_text()
     assert "app.js?build=" in target.read_text()
     assert (target.parent / "app.js").is_file()
+    assert (target.parent / "palette.css").is_file()
     payload = json.loads((target.parent / "prices.json").read_text())
     assert payload["days"]
     page = target.read_text()

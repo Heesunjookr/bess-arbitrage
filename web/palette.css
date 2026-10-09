@@ -1,0 +1,9 @@
+:root {
+  --blue: #315f73;
+  --ink: #25333d;
+  --muted: #687680;
+  --line: #d7dcdf;
+  --soft: #f3f5f6;
+}
+
+.dispatch { background: #3f7f70; }

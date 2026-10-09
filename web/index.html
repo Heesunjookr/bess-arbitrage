@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="German power-market research tools for BESS dispatch, intraday signals and investment screening.">
   <title>German Power Market Lab · Heesun Joo</title>
-  <link rel="stylesheet" href="styles.css?build=__BUILD_ID__"><style>[hidden]{display:none!important}</style>
+  <link rel="stylesheet" href="styles.css?build=__BUILD_ID__"><link rel="stylesheet" href="palette.css?build=__BUILD_ID__"><style>[hidden]{display:none!important}</style>
 </head>
 <body>
 <header>
@@ -36,8 +36,9 @@
       <div id="empty" class="empty"><p>Price and dispatch results will appear here.</p></div>
       <div id="output" hidden>
         <div class="metrics"><article><small>PF ceiling</small><strong id="perfectMetric">—</strong><span>benchmark</span></article><article><small>D-1 value</small><strong id="d1Metric">—</strong><span>settled</span></article><article><small>Capture</small><strong id="captureMetric">—</strong><span>of ceiling</span></article><article><small>Forecast cost</small><strong id="gapMetric">—</strong><span>value gap</span></article></div>
-        <div class="chart-card"><div class="chart-title"><h3>Price and D-1 dispatch</h3><div class="chart-tools" style="display:flex;align-items:center"><div class="legend"><i class="actual"></i>Actual price <i style="background:#c47732"></i>D-1 price <i style="background:#23856d"></i>Discharge <i style="background:#d49a3a"></i>Charge</div><button id="download" style="margin-left:12px;padding:4px 7px;border:1px solid #c5cbd0;background:#fff;color:#66717c;font-size:10px;cursor:pointer">Export CSV</button></div></div><svg id="dispatchChart" viewBox="0 0 900 390" role="img"></svg></div>
+        <div class="chart-card"><div class="chart-title"><h3>Price and D-1 dispatch</h3><div class="chart-tools" style="display:flex;align-items:center"><div class="legend"><i class="actual"></i>Actual price <i style="background:#a66f52"></i>D-1 price <i style="background:#3f7f70"></i>Discharge <i style="background:#c19755"></i>Charge</div><button id="download" style="margin-left:12px;padding:4px 7px;border:1px solid #c5cbd0;background:#fff;color:#687680;font-size:10px;cursor:pointer">Export CSV</button></div></div><svg id="dispatchChart" viewBox="0 0 900 390" role="img"></svg></div>
         <div class="insight"><b>Observation</b><p id="insightText"></p></div>
+        <div class="scope"><b>Method</b><p>Finite-state dispatch with explicit power, energy, efficiency and throughput-cost constraints.</p><a href="https://github.com/Heesunjookr/bess-arbitrage" target="_blank">Method and code ↗</a></div>
       </div>
     </div>
   </section>
